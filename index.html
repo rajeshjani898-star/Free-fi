@@ -1,837 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>drive mad</title>
-    
-
-  </head>
-    
-  <body>
-  <!DOCTYPE html>
-<html lang="en-us">
-
 <head>
-  <script src="https://deckard.openprocessing.org/user485717/visual2458132/hf42bec4b58ab09712c0f3bedb92cada1/index.wasm.js"></script>
-  <script src="https://deckard.openprocessing.org/user485717/visual2458132/hf42bec4b58ab09712c0f3bedb92cada1/index.data.js"></script>
-  <title>Drive Mad</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonTrade Elite - Green Protocol Final</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-green: #00ff55;
+            --neon-lime: #ccff00;
+            --neon-red: #ff3333;
+            --bg-deep: #000800;
+            --glass: rgba(0, 255, 85, 0.05);
+            --glass-border: 1px solid rgba(0, 255, 85, 0.3);
+        }
+
+        body {
+            background: linear-gradient(180deg, #000000 0%, #051405 100%);
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .rajdhani { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+
+        .neon-panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 255, 85, 0.1);
+        }
+
+        #chartWrapper { background: #000; position: relative; border-radius: 8px; overflow: hidden; height: 420px; border: 1px solid #111; }
+        .ticker { position: absolute; top: 15px; right: 25px; font-size: 1.8rem; font-family: 'Rajdhani'; z-index: 10; padding: 5px 15px; background: rgba(0,0,0,0.6); border-radius: 4px; border: 1px solid currentColor; }
+
+        .btn-cyber { font-family: 'Rajdhani'; font-weight: 700; transition: 0.3s; border-radius: 4px; }
+        .btn-long { border: 1px solid var(--neon-green); color: var(--neon-green); }
+        .btn-long:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 25px var(--neon-green); }
+        .btn-short { border: 1px solid var(--neon-red); color: var(--neon-red); }
+        .btn-short:hover { background: var(--neon-red); color: #000; box-shadow: 0 0 25px var(--neon-red); }
+        
+        .ai-active { background: var(--neon-lime) !important; color: #000 !important; box-shadow: 0 0 20px var(--neon-lime); }
+        
+        #appScreen { display: none; }
+        .log-entry { font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 5px 0; font-family: 'Courier New', monospace; }
+    </style>
 </head>
+<body>
 
-<body id="body">
-  <style>
-    @font-face {
-      font-family: 'baloo 2';
-      font-style: normal;
-      font-weight: 800;
-      font-display: swap;
-      src: url(baloo2.woff) format('woff');
-      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
-    }
-
-    .fullscreen {
-      position: absolute;
-      width: 100%;
-      height: 100%
-    }
-
-    .center {
-      text-align: center
-    }
-
-    .centered {
-      margin-left: auto;
-      margin-right: auto;
-      display: block;
-      text-align: center
-    }
-
-    #play_overlay {
-      display: none;
-      z-index: 10
-    }
-
-    .middle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%)
-    }
-
-    .middle_vertical {
-      position: absolute;
-      top: 50%;
-      transform: translate(0%, -50%)
-    }
-
-    .edge {
-      margin-left: auto;
-      margin-right: auto;
-      width: 164px;
-      height: 180px;
-      background-color: #cfdaed;
-      box-shadow: 5px 1px 5px rgba(0, 0, 0, .25);
-      transform: rotate(-5deg)
-    }
-
-    .box {
-      width: 164px;
-      height: 164px;
-      background-color: #fff;
-      position: relative
-    }
-
-    .black {
-      width: 132px;
-      height: 156px;
-      background-color: #000;
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      margin: 0 auto
-    }
-
-    .cover {
-      width: 128px;
-      height: 128px;
-      margin: 2px
-    }
-
-    .title {
-      font-size: 14px;
-      font-family: 'baloo 2', ubuntu, verdana, sans-serif
-    }
-
-    .author {
-      font-family: 'baloo 2', ubuntu, verdana, sans-serif;
-      border-spacing: 0;
-      font-size: 14px;
-      color: #ccc;
-      text-align: right;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      position: absolute;
-      width: 150px;
-      top: 4px;
-      right: 142px;
-      transform-origin: right top;
-      transform: rotate(-90deg)
-    }
-
-    .loading {
-      margin-top: 20px;
-      margin-bottom: 10px
-    }
-
-    .description {
-      font-family: 'baloo 2', ubuntu, verdana, sans-serif;
-      display: inline-block;
-      font-size: 16px;
-      line-height: 1.2em;
-      width: 240px
-    }
-
-    .button {
-      display: inline-block;
-      border: 2px solid #00a2ff;
-      border-radius: 7px;
-      width: 133px;
-      height: 43px;
-      font-size: 16px;
-      line-height: 43px;
-      margin: 0 auto
-    }
-
-    .overlay_button {
-      display: inline-block;
-      border: 2px solid #000;
-      border-radius: 12px;
-      width: 200px;
-      height: 50px;
-      font-size: 18px;
-      line-height: 50px;
-      margin: 11px
-    }
-
-    #play_button {
-      color: #333;
-      background-color: #eee
-    }
-
-    .emscripten_border {
-      position: relative
-    }
-
-    #gradient {
-      background-image: linear-gradient(135deg, #70e1fd, #00a2ff);
-      position: absolute;
-      top: 0;
-      width: 100%;
-      height: 768px
-    }
-
-    * {
-      margin: 0;
-      padding: 0
-    }
-
-    p,
-    ul,
-    ol,
-    dl {
-      margin-bottom: 1em
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    p,
-    ul,
-    ol,
-    dl {
-      margin-left: 16px;
-      margin-right: 16px
-    }
-
-    img {
-      vertical-align: top
-    }
-
-    html,
-    body {
-      font-family: 'baloo 2', ubuntu, verdana, sans-serif;
-      font-size: 18px;
-      color: #bbb;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      border: 0;
-      line-height: 1.8;
-      overflow: hidden;
-      display: block
-    }
-
-    canvas {
-      padding-right: 0;
-      margin-left: auto;
-      margin-right: auto;
-      display: block;
-      margin-top: auto;
-      margin-bottom: auto;
-      position: relative;
-      width: 1024px;
-      height: 768px
-    }
-
-    div.emscripten {
-      text-align: center
-    }
-
-    canvas.emscripten {
-      border: 0;
-      background-color: #000
-    }
-
-    #status {
-      display: inline-block;
-      width: 100%;
-      font-weight: 700;
-      color: #787878;
-      text-align: center
-    }
-
-    #modal_parent {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: #000;
-      background-color: rgba(0, 0, 0, .4)
-    }
-
-    .modal_inner {
-      display: none
-    }
-
-    #play_content {
-      color: #fff;
-      z-index: 10
-    }
-
-    #modal_content {
-      position: relative;
-      background-color: #fefefe;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #888;
-      box-sizing: border-box
-    }
-
-    .error_message {
-      color: red
-    }
-
-    .error_text {
-      color: red;
-      font-family: sans-serif;
-      font-size: .8em
-    }
-
-    #modal_close_button {
-      color: #aaa;
-      position: absolute;
-      right: 15px;
-      top: 10px;
-      font-size: 28px;
-      line-height: 28px;
-      font-weight: 700;
-      transition: .2s
-    }
-
-    #modal_close_button:hover,
-    #modal_close_button:focus {
-      color: #000;
-      text-decoration: none;
-      cursor: pointer
-    }
-
-    a:link {
-      color: #00b9fe;
-      text-decoration: none;
-      transition: .2s
-    }
-
-    a:visited {
-      color: #00b9fe
-    }
-
-    a:hover,
-    a:active {
-      opacity: .5
-    }
-
-    .link_image_button {
-      margin-right: 10px
-    }
-
-    .playstore075 {
-      width: 153px;
-      height: 45px
-    }
-
-    .appstore075 {
-      width: 135px;
-      height: 45px
-    }
-
-    #progress_or_play {
-      margin-top: 10px
-    }
-
-    #terms_p {
-      font-family: sans-serif;
-      color: #141414;
-      font-size: .7em;
-      margin-bottom: 0
-    }
-
-    #terms_p a {
-      color: #f0f0f0
-    }
-
-    .deeplink_message {
-      font-size: 1em;
-      color: #f0f0f0;
-      line-height: 1.1em;
-      font-size: 20px
-    }
-
-    .menu {
-      color: #f0f0f0
-    }
-
-    .level_button {
-      border: 2px solid #222;
-      border-radius: 1em;
-      color: #f0f0f0;
-      background-color: #00a2ff;
-      line-height: 1em;
-      height: 2.5em;
-      width: 5em;
-      justify-self: center;
-      position: relative;
-      padding-top: .6em
-    }
-
-    .grid_element_center {
-      justify-self: center
-    }
-
-    .level_button_name {
-      font-size: .6em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis
-    }
-
-    .level_button_number {
-      font-size: 1.2em
-    }
-
-    .level_button:hover {
-      background-color: #00c2ff
-    }
-
-    .level_checkmark {
-      position: absolute;
-      right: 0;
-      top: 0;
-      margin: 0;
-      padding: 0;
-      text-align: right;
-      font-size: 1.2em;
-      line-height: 1.2em
-    }
-
-    .level_button a {
-      color: #f0f0f0;
-      opacity: 1
-    }
-
-    .menu_items {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 20px
-    }
-
-    .menu_header {
-      font-size: 3em;
-      margin-top: 40px
-    }
-
-    #webview_content {
-      display: none;
-      background-color: transparent;
-      position: absolute;
-      top: 0;
-      width: 100%;
-      height: 768px
-    }
-
-    .webview {
-      width: 100%;
-      height: 100%;
-      background: 0 0;
-      margin: 0;
-      border: 0;
-      overflow: hidden
-    }
-  </style>
-
-  <div id="modal_parent">
-    <div id="modal_content">
-      <span id="modal_close_button">&times;</span>
-      <div id="store_link_modal_content" class="modal_inner"></div>
-      <div id="share_file_modal_content" class="modal_inner"></div>
+    <div id="loader" class="vh-100 d-flex flex-column justify-content-center align-items-center">
+        <div class="spinner-grow text-success" role="status"></div>
+        <div class="rajdhani text-success mt-3 h5">SYNCHRONIZING REPOSITORY...</div>
     </div>
-  </div>
-  <div id="canvas_border" class="emscripten_border">
-    <div id="play_content" class="middle center">
-      <div class="edge">
-        <div class="box">
-          <div class="black">
-            <img src="webapp/cover.jpg" class="cover" />
-            <p class="title">Drive Mad</p>
-            <p class="author">Martin Magni</p>
-          </div>
+
+    <div id="authScreen" class="vh-100 d-flex align-items-center justify-content-center" style="display:none;">
+        <div class="neon-panel p-5 text-center" data-aos="zoom-in" style="width: 420px;">
+            <i class="bi bi-cpu-fill text-success h1"></i>
+            <h1 class="rajdhani text-success mb-2">NEONTRADE</h1>
+            <p class="text-muted small mb-4">MASTER ADMIN ACCESS</p>
+            <button class="btn btn-long w-100 py-2 btn-cyber" onclick="initApp()">CONNECT UPLINK</button>
         </div>
-      </div>
-      <div id="progress_or_play"><progress id="progress" class="loading" value="0" max="100"></progress></div>
-      <p class="description"></p>
     </div>
-    <canvas class="emscripten" id="canvas" tabindex="-1"></canvas>
-    <div id="gradient"></div>
-    <div id="webview_content"></div>
-  </div>
-  <script type="text/javascript">
-    var pokiDebug = false;
-    var postRunDone = false;
-    var theDomLoaded = false;
-    var pokiInited = false;
-    var gameReadyToStart = false;
-    var requestedCanvas = false;
-    var adblocker = false;
-    var gameStarted = false;
-    var updatedScreenSize = false;
-    var startupTimeStr = "";
-    var loadProgressFrac = 0;
-    var fakeProgressPercentStart = 80 + Math.random() * 15;
-    window.addEventListener('DOMContentLoaded', domContentLoaded);
-    window.addEventListener('load', function() {
-      console.log("Load event received");
-      if (inIframe()) {
-        document.addEventListener('click', ev => {
-          let canvas = document.getElementById('canvas');
-          if (canvas) {
-            canvas.focus();
-          }
-        });
-      }
-    });
 
-    function inIframe() {
-      try {
-        return window.self !== window.top;
-      } catch (e) {
-        return true;
-      }
-    }
+    <div id="appScreen" class="container-fluid py-3 px-4">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <div class="text-muted small rajdhani">Liquid Assets</div>
+                <h2 class="rajdhani text-success mb-0">₹<span id="balDisplay">1000.00</span></h2>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-outline-info btn-sm btn-cyber" onclick="exportLogs()"><i class="bi bi-download"></i> EXPORT REPORT</button>
+                <button id="aiBtn" class="btn btn-outline-warning btn-sm btn-cyber" onclick="toggleAI()"><i class="bi bi-cpu"></i> AI PATTERN: OFF</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="resetSystem()"><i class="bi bi-arrow-counterclockwise"></i> RESET</button>
+            </div>
+        </div>
 
-    function updateLoadProgress() {
-      let progressElement = document.getElementById('progress');
-      if (progressElement) {
-        progressElement.value = Math.round(loadProgressFrac * fakeProgressPercentStart);
-        progressElement.max = 100;
-      }
-      if (loadProgressFrac >= 1) {
-        console.log("Loading done");
-        tryStartGame();
-      }
-    }
+        <div class="row g-4">
+            <div class="col-lg-9">
+                <div class="neon-panel p-1 mb-4" id="chartWrapper">
+                    <div id="priceTicker" class="ticker text-success">0.00</div>
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="neon-panel p-3 text-center"><small class="text-muted rajdhani d-block">Win Rate</small><span id="statWinRate" class="rajdhani h4">0%</span></div></div>
+                    <div class="col-md-4"><div class="neon-panel p-3 text-center text-success"><small class="text-muted rajdhani d-block">Profit/Loss</small><span id="statRevenue" class="rajdhani h4">₹0</span></div></div>
+                    <div class="col-md-4"><div class="neon-panel p-3 text-center text-info"><small class="text-muted rajdhani d-block">Trades</small><span id="statTotal" class="rajdhani h4">0</span></div></div>
+                </div>
+            </div>
 
-    function domContentLoaded() {
-      initPokiSdk();
-      console.log("DOM content loaded event received");
-      let canvas = document.getElementById('canvas');
-      canvas.addEventListener("contextmenu", stopContextMenu);
-      if (!postRunDone) {
-        resizeCanvas(false);
-      }
-      window.addEventListener('blur', ev => setGameFocus(false));
-      window.addEventListener('focus', ev => setGameFocus(true));
-      canvas.onpointerdown = beginPointerDrag;
-      canvas.onpointerup = endPointerDrag;
-      theDomLoaded = true;
-    }
+            <div class="col-lg-3">
+                <div class="neon-panel p-4 mb-4">
+                    <h5 class="rajdhani mb-4 text-center">Execution</h5>
+                    <div class="mb-4">
+                        <label class="small text-muted rajdhani">Position Size (₹)</label>
+                        <input type="number" id="tradeAmt" class="form-control bg-dark text-white rajdhani fs-4 text-center" value="100">
+                    </div>
+                    <div class="row g-2 mb-4">
+                        <div class="col-6"><button class="btn btn-long w-100 py-3 btn-cyber h5 m-0" onclick="executeTrade('LONG')">LONG</button></div>
+                        <div class="col-6"><button class="btn btn-short w-100 py-3 btn-cyber h5 m-0" onclick="executeTrade('SHORT')">SHORT</button></div>
+                    </div>
+                </div>
+                <div class="neon-panel p-3">
+                    <h6 class="rajdhani text-muted mb-3 border-bottom border-secondary pb-2">Terminal Logs</h6>
+                    <div id="txLog" class="log-container" style="height: 250px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function beginPointerDrag(e) {
-      let canvas = document.getElementById('canvas');
-      canvas.setPointerCapture(e.pointerId);
-    }
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        let balance = parseFloat(localStorage.getItem('nt_balance')) || 1000.00;
+        let stats = JSON.parse(localStorage.getItem('nt_stats')) || { wins: 0, total: 0, revenue: 0 };
+        let history = JSON.parse(localStorage.getItem('nt_history')) || [];
+        let currentPrice = 68420.50;
+        let aiEnabled = false, forcedTrend = null, candles = [];
 
-    function endPointerDrag(e) {
-      let canvas = document.getElementById('canvas');
-      canvas.releasePointerCapture(e.pointerId);
-    }
+        const canvas = document.getElementById('mainChart');
+        const ctx = canvas.getContext('2d');
 
-    function setGameFocus(f) {
-      if (postRunDone) {
-        Module.ccall('set_game_focus', 'v', ['number'], [f]);
-      }
-    }
-
-    function canBeGameGuid(str) {
-      return str && str.match('([A-F]|[0-9]){16}');
-    }
-
-    function getMeta(metaName) {
-      const metas = document.getElementsByTagName('meta');
-      for (let i = 0; i < metas.length; i++) {
-        if (metas[i].getAttribute('name') === metaName) {
-          return metas[i].getAttribute('content');
+        function initApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'block';
+            AOS.init();
+            resizeCanvas();
+            seedMarket();
+            updateUI();
+            history.forEach(entry => log(entry.msg, entry.color, false));
+            log("UPLINK STABLE. PROTOCOL RESUMED.", "text-success");
         }
-      }
-      return '';
-    }
 
-    function getCSSRgb(color) {
-      return `rgb(${Math.round(color[0])}, ${Math.round(color[1])}, ${Math.round(color[2])})`;
-    }
-    let lastGradientStyleStr = "";
-    let lastDeepLinkLoadFraction = 0;
-
-    function getGradientStr(frac) {
-      let fromColor = [frac * 0x70, frac * 0xe1, frac * 0xfd];
-      let toColor = [frac * 0x00, frac * 0xa2, frac * 0xff];
-      let str = `linear-gradient(135deg, ${getCSSRgb(fromColor)}, ${getCSSRgb(toColor)})`
-      return str;
-    }
-
-    function hideOverlayGradient() {
-      var gradient = document.getElementById('gradient');
-      gradient.style.display = "none";
-    }
-    var showedStartGameError = false;
-
-    function setPokiInited() {
-      pokiInited = true;
-    }
-
-    function initPokiSdk() {
-      setPokiInited();
-    }
-
-    function hideOverlay() {
-      var playContent = document.getElementById('play_content');
-      playContent.style.display = "none";
-      hideOverlayGradient();
-    }
-
-    function startGame() {
-      try {
-        console.log("Registering event listeners");
-        window.addEventListener("beforeunload", function(event) {
-          Module.ccall('app_terminate_if_necessary', 'v');
-        });
-        window.addEventListener("unload", function(event) {
-          Module.ccall('app_terminate_if_necessary', 'v');
-        });
-        document.addEventListener("visibilitychange", function() {
-          if (document.visibilityState === 'visible') {
-            Module.ccall('app_resume', 'v');
-          } else {
-            Module.ccall('app_pause', 'v');
-          }
-        });
-        console.log("Confirming accept in app");
-        try {
-          Module.ccall('user_accepted_and_clicked', 'v');
-          Module.ccall('set_is_mobile', 'v', ['number'], [matchMedia('(pointer:coarse)').matches]);
-        } catch (err4) {}
-        gameStarted = true;
-        if (!updatedScreenSize) {
-          resizeCanvas(true);
-        }
-      } catch (err) {
-        if (!showedStartGameError) {
-          let foundModuleAsm = false;
-          let additionalInfo = "";
-          try {
-            if (Module["asm"]) {
-              foundModuleAsm = true;
-            }
-          } catch (err2) {}
-          if (!foundModuleAsm) {
-            additionalInfo += "Could not find Module.asm";
-          }
-          console.log(`Error when starting game. Try to reload the page. Error message: ${err}. ${additionalInfo}`);
-          showedStartGameError = true;
-        }
-      }
-    }
-    var pokiStopped = true;
-
-    function pokiEnsureStop() {
-      if (!pokiStopped) {
-        pokiStopped = true;
-      }
-    }
-
-    function pokiEnsureStart() {
-      if (pokiStopped) {
-        pokiStopped = false;
-      }
-    }
-    var startGameAttempts = 0;
-    var tryStartGameTimeout = null;
-
-    function tryStartGame() {
-      console.log("tryStartGame()", gameReadyToStart);
-      if (gameReadyToStart) {
-        return;
-      }
-      if (!postRunDone || !theDomLoaded || !pokiInited) {
-        startGameAttempts++;
-        if (startGameAttempts == 20) {
-          return;
-        }
-        if (tryStartGameTimeout != null) {
-          clearTimeout(tryStartGameTimeout);
-        }
-        tryStartGameTimeout = setTimeout(tryStartGame, startGameAttempts * 100);
-        console.log("Not ready to start game yet...");
-        return;
-      }
-      gameReadyToStart = true;
-      console.log("Starting game");
-      startGame();
-    }
-
-    function simpleLogC(str) {
-      if (postRunDone) {
-        Module.ccall('log_simple', 'v', ['string'], [str]);
-      } else {
-        console.log(str);
-      }
-    }
-
-    function appErrorC(code, str) {
-      if (postRunDone) {
-        Module.ccall('app_error', 'v', ['number', 'string'], [code, str]);
-      } else {
-        console.error(str, code);
-      }
-    }
-
-    function simpleAppErrorC(str) {
-      appErrorC(1, str);
-    }
-
-    function parseUrlArgument(name) {
-      let result = "";
-      let str = window.location.search;
-      if (str.length > 0 && str[0] == '?') {
-        var arr = str.substr(1).split('&');
-        for (let i = 0; i < arr.length; i++) {
-          if (arr[i].startsWith(name + "=")) {
-            result = arr[i].substr(name.length + 1);
-            break;
-          }
-        }
-      }
-      return result;
-    }
-
-    function parseUrlArgumentInt(name) {
-      let str = parseUrlArgument(name);
-      let parsed = parseInt(str);
-      if (isNaN(parsed)) {
-        return 0;
-      } else {
-        return parsed;
-      }
-    }
-
-    function resizeCanvas(informC) {
-      let iw = window.innerWidth;
-      let ih = window.innerHeight;
-      let canvas = document.getElementById('canvas');
-      let border = document.getElementById('canvas_border');
-      canvas.width = iw * window.devicePixelRatio;
-      canvas.height = ih * window.devicePixelRatio;
-      border.style.marginTop = '0px';
-      let gradient = document.getElementById("gradient");
-      let webViewContent = document.getElementById("webview_content");
-      [gradient, webViewContent].forEach(e => {
-        if (e) {
-          e.style.left = '0px';
-        }
-      });
-      [canvas, gradient, webViewContent].forEach(e => {
-        if (e) {
-          e.style.width = iw + 'px';
-          e.style.height = ih + 'px';
-          e.style.borderRadius = '0px';
-        }
-      });
-      if (informC && gameStarted && requestedCanvas) {
-        Module.ccall("update_screen_size", "v", ["number", "number", "number"], [canvas.width, canvas.height, window.devicePixelRatio]);
-        updatedScreenSize = true;
-      }
-    }
-
-    function stopContextMenu(event) {
-      event.preventDefault();
-      return false;
-    }
-    var Module = {
-      locateFile: function(path, prefix) {
-        if (prefix == "") {
-          return "" + path;
-        }
-        return prefix + path;
-      },
-      preRun: [function() {
-        console.log("preRun() called");
-      }],
-      postRun: [function() {
-        console.log("postRun() called");
-        document.onfullscreenchange = function() {
-          setTimeout(function() {
-            resizeCanvas(true);
-            if (document.fullscreenElement && gameStarted && requestedCanvas) {
-              let canvas = document.getElementById('canvas');
-              Module.ccall("update_screen_size", "v", ["number", "number", "number"], [canvas.width, canvas.height, 1]);
-            }
-          }, 500);
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('authScreen').style.display = 'flex';
+            }, 1000);
+            window.addEventListener('resize', resizeCanvas);
         };
-        window.addEventListener('resize', (event) => resizeCanvas(true), false);
-        if (theDomLoaded) {
-          resizeCanvas(true);
-        }
-        console.log("Registering keydown listener");
-        window.addEventListener('keydown', e => {
-          ccall("keydown_browser", "v", ["string"], [e.key]);
-        });
-        postRunDone = true;
-      }],
-      print: (function() {
-        return function(text) {
-          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-          console.log(text);
-        };
-      })(),
-      printErr: function(text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-        console.error(text);
-      },
-      canvas: (function() {
-        var canvas = document.getElementById('canvas');
-        canvas.addEventListener("webglcontextlost", function(e) {
-          alert('WebGL context lost. You will need to reload the page.');
-          e.preventDefault();
-        }, false);
-        requestedCanvas = true;
-        return canvas;
-      })(),
-      setStatus: function(text) {
-        if (!Module.setStatus.last) Module.setStatus.last = {
-          time: Date.now(),
-          text: ''
-        };
-        if (text === Module.setStatus.last.text) return;
-        var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-        var now = Date.now();
-        if (m && now - Module.setStatus.last.time < 30) return;
-        Module.setStatus.last.time = now;
-        Module.setStatus.last.text = text;
-        if (m) {
-          text = m[1];
-          loadProgressFrac = parseInt(m[2]) / parseInt(m[4]);
-        } else {
-          loadProgressFrac = 1;
-        }
-        updateLoadProgress();
-      },
-      totalDependencies: 0,
-      monitorRunDependencies: function(left) {
-        this.totalDependencies = Math.max(this.totalDependencies, left);
-      }
-    };
-    var notifications = [];
-    var webViewIframe = null;
-    var storedScripts = [];
-    var webviewDomLoaded = false;
-    async function isUrlFound(url) {
-      try {
-        const response = await fetch(url, {
-          method: 'HEAD',
-          cache: 'no-cache'
-        });
-        return response.status === 200;
-      } catch (error) {
-        return false;
-      }
-    }
 
-    fun
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        function seedMarket() {
+            for(let i=0; i<60; i++) addCandle();
+            setInterval(() => { addCandle(); drawChart(); }, 2000);
+        }
+
+        function addCandle() {
+            let open = candles.length > 0 ? candles[candles.length - 1].close : currentPrice;
+            let move = (Math.random() - 0.5) * 60;
+            if (forcedTrend === 'up') move = Math.abs(move) + 20;
+            if (forcedTrend === 'down') move = -Math.abs(move) - 20;
+            let close = open + move;
+            let high = Math.max(open, close) + Math.random() * 10;
+            let low = Math.min(open, close) - Math.random() * 10;
+            currentPrice = close;
+            candles.push({ open, close, high, low });
+            if (candles.length > 80) candles.shift();
+            document.getElementById('priceTicker').innerText = currentPrice.toFixed(2);
+            document.getElementById('priceTicker').style.color = close >= open ? 'var(--neon-green)' : 'var(--neon-red)';
+        }
+
+        function drawChart() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const w = canvas.width / candles.length;
+            const max = Math.max(...candles.map(c => c.high)) + 10;
+            const min = Math.min(...candles.map(c => c.low)) - 10;
+            const range = max - min;
+            const getY = (p) => canvas.height - ((p - min) / range) * canvas.height;
+            candles.forEach((c, i) => {
+                const x = i * w;
+                ctx.strokeStyle = c.close >= c.open ? '#00ff55' : '#ff3333';
+                ctx.beginPath(); ctx.moveTo(x + w/2, getY(c.high)); ctx.lineTo(x + w/2, getY(c.low)); ctx.stroke();
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.fillRect(x + 3, getY(Math.max(c.open, c.close)), w - 6, Math.abs(getY(c.open) - getY(c.close)) + 1);
+            });
+        }
+
+        function executeTrade(type) {
+            const amt = parseFloat(document.getElementById('tradeAmt').value);
+            if (amt > balance) return log("ERROR: INSUFFICIENT BALANCE", "text-danger");
+            balance -= amt; updateUI();
+            log(`EXEC: ${type} @ ${currentPrice.toFixed(2)}`, "text-warning");
+            let entry = currentPrice;
+            setTimeout(() => {
+                const isWin = type === 'LONG' ? currentPrice > entry : currentPrice < entry;
+                if (isWin) {
+                    let win = amt * 1.85; balance += win; stats.wins++; stats.revenue += (win - amt);
+                    log(`PROFIT: +₹${(win - amt).toFixed(2)}`, "text-success");
+                } else {
+                    log(`LOSS: -₹${amt.toFixed(2)}`, "text-danger");
+                }
+                stats.total++; saveState(); updateUI();
+            }, 5000);
+        }
+
+        function toggleAI() {
+            aiEnabled = !aiEnabled;
+            const btn = document.getElementById('aiBtn');
+            if(aiEnabled) {
+                btn.classList.add('ai-active'); btn.innerHTML = '<i class="bi bi-cpu-fill"></i> AI PATTERN: ON';
+                log("AI OVERRIDE: TARGETING VOLATILITY", "text-info");
+                setTimeout(() => {
+                    forcedTrend = Math.random() > 0.5 ? 'up' : 'down';
+                    log(`AI SIGNAL: MARKET SHORTING ${forcedTrend.toUpperCase()}`, "text-lime");
+                    setTimeout(() => forcedTrend = null, 8000);
+                }, 1000);
+            } else { btn.classList.remove('ai-active'); btn.innerHTML = '<i class="bi bi-cpu"></i> AI PATTERN: OFF'; forcedTrend = null; }
+        }
+
+        function updateUI() {
+            document.getElementById('balDisplay').innerText = balance.toFixed(2);
+            document.getElementById('statRevenue').innerText = `₹${stats.revenue.toFixed(0)}`;
+            document.getElementById('statTotal').innerText = stats.total;
+            document.getElementById('statWinRate').innerText = (stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0) + '%';
+        }
+
+        function saveState() {
+            localStorage.setItem('nt_balance', balance);
+            localStorage.setItem('nt_stats', JSON.stringify(stats));
+            localStorage.setItem('nt_history', JSON.stringify(history.slice(0, 50)));
+        }
+
+        function log(msg, color, shouldSave = true) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${color}`;
+            entry.innerHTML = `<span class="text-muted">[${new Date().toLocaleTimeString([], {hour12: false})}]</span> ${msg}`;
+            document.getElementById('txLog').prepend(entry);
+            if (shouldSave) { history.unshift({ msg, color }); saveState(); }
+        }
+
+        function exportLogs() {
+            const data = history.map(h => `[${new Date().toISOString()}] ${h.msg}`).join('\n');
+            const blob = new Blob([data], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.download = 'GreenProtocol_Audit.txt';
+            anchor.click();
+        }
+
+        function resetSystem() {
+            if(confirm("Confirm Factory Reset?")) { localStorage.clear(); location.reload(); }
+        }
+    </script>
+</body>
+</html>
