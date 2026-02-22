@@ -5,25 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NeonTrade Futures • Green Protocol</title>
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap 5.3 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <!-- AOS -->
   <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
     :root {
       --neon-green: #00ff55;
       --neon-lime:  #ccff00;
       --dark-bg:    #000814;
-      --glass:      rgba(0, 255, 85, 0.06);
-      --glass-border: rgba(0, 255, 85, 0.25);
+      --glass:      rgba(0, 255, 85, 0.07);
+      --glass-border: rgba(0, 255, 85, 0.28);
       --loss-red:   #ff2d55;
     }
 
@@ -32,79 +31,79 @@
       color: #e0ffe0;
       font-family: 'Inter', system-ui, sans-serif;
       min-height: 100vh;
+      margin: 0;
       overflow-x: hidden;
     }
 
-    h1, h2, h3, h4, h5, .display-*, .nav-link, .btn {
+    h1, h2, h3, h4, h5, .btn, .nav-link {
       font-family: 'Rajdhani', sans-serif;
-      letter-spacing: 0.5px;
     }
 
     .glass {
       background: var(--glass);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 255, 85, 0.12);
+      box-shadow: 0 8px 32px rgba(0, 255, 85, 0.14);
     }
 
     .neon-text {
       color: var(--neon-green);
-      text-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+      text-shadow: 0 0 12px var(--neon-green), 0 0 24px var(--neon-green);
     }
 
     .btn-neon {
-      background: linear-gradient(45deg, var(--neon-green), #00cc44);
+      background: linear-gradient(45deg, #00ff55, #00cc44);
       border: none;
       color: black;
       font-weight: 600;
-      text-shadow: 0 0 8px rgba(0,0,0,0.6);
+      transition: all 0.2s;
     }
 
     .btn-neon:hover {
       background: var(--neon-lime);
-      transform: translateY(-1px);
-      box-shadow: 0 0 25px var(--neon-lime);
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px var(--neon-lime);
     }
 
-    .btn-danger {
-      background: var(--loss-red);
-      border: none;
+    #price {
+      transition: color 0.5s;
     }
 
-    #chartCanvas {
-      image-rendering: pixelated;
-      touch-action: none;
+    #priceChange {
+      font-size: 0.9rem;
+      min-width: 70px;
+      text-align: right;
     }
 
     .streak-day {
-      width: 38px;
-      height: 38px;
-      line-height: 38px;
-      text-align: center;
-      border-radius: 50%;
-      font-weight: 600;
+      width: 40px; height: 40px; line-height: 40px;
+      border-radius: 50%; text-align: center; font-weight: 600;
       transition: all 0.4s;
     }
 
     .streak-active {
-      background: var(--neon-green);
+      background: var(--neon-green) !important;
       color: black;
-      box-shadow: 0 0 20px var(--neon-green);
-      transform: scale(1.15);
+      box-shadow: 0 0 24px var(--neon-green);
+      transform: scale(1.18);
     }
 
-    .badge-protocol {
-      font-size: 1.1rem;
-      padding: 0.6em 1.4em;
-      background: linear-gradient(90deg, #00ff55, #00cc44);
-      color: black;
+    @keyframes ticker {
+      0%   { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    #tickerContent {
+      display: inline-block;
+      white-space: nowrap;
+      animation: ticker 35s linear infinite;
     }
 
     @media (max-width: 576px) {
-      .btn-lg { font-size: 1.1rem; padding: 1rem; }
-      .streak-day { width: 32px; height: 32px; line-height: 32px; font-size: 0.85rem; }
+      .streak-day { width: 34px; height: 34px; line-height: 34px; font-size: 0.9rem; }
+      .btn-lg { padding: 0.9rem 1.2rem; font-size: 1.1rem; }
     }
   </style>
 </head>
@@ -112,37 +111,31 @@
 
 <!-- Loading -->
 <div id="loading" class="position-fixed top-0 start-0 w-100 h-100 bg-dark d-flex justify-content-center align-items-center" style="z-index:9999;">
-  <div class="spinner-grow text-success" style="width:4rem;height:4rem;" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
+  <div class="spinner-grow text-success" style="width:4.5rem;height:4.5rem;"></div>
 </div>
 
 <!-- Login -->
 <div id="loginScreen" class="container d-flex align-items-center justify-content-center min-vh-100">
   <div class="card glass p-4 p-md-5 col-11 col-sm-9 col-md-7 col-lg-5" data-aos="zoom-in">
     <h1 class="text-center neon-text mb-2 fw-bold">NEONTRADE</h1>
-    <div class="badge badge-protocol mx-auto mb-4">7-DAY GREEN PROTOCOL</div>
+    <div class="badge bg-success mx-auto mb-4 px-4 py-2 fs-5">7-DAY GREEN PROTOCOL</div>
 
     <ul class="nav nav-tabs nav-justified mb-4" id="authTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">ACCESS</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new" type="button">NEW NODE</button>
-      </li>
+      <li class="nav-item"><button class="nav-link active" id="access-tab" data-bs-toggle="tab" data-bs-target="#access">ACCESS</button></li>
+      <li class="nav-item"><button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new">NEW NODE</button></li>
     </ul>
 
     <div class="tab-content">
       <div class="tab-pane fade show active" id="access">
         <form id="loginForm">
-          <input type="email"    class="form-control mb-3 glass" placeholder="Node ID (email)" required>
+          <input type="email" class="form-control mb-3 glass" placeholder="Node ID (email)" required>
           <input type="password" class="form-control mb-4 glass" placeholder="Quantum Key" required>
-          <button type="submit" class="btn btn-neon btn-lg w-100">CONNECT</button>
+          <button type="submit" class="btn btn-neon btn-lg w-100">CONNECT TO GRID</button>
         </form>
       </div>
       <div class="tab-pane fade" id="new">
         <form id="registerForm">
-          <input type="email"    class="form-control mb-3 glass" placeholder="New Node ID" required>
+          <input type="email" class="form-control mb-3 glass" placeholder="New Node ID" required>
           <input type="password" class="form-control mb-4 glass" placeholder="Create Quantum Key" required>
           <button type="submit" class="btn btn-neon btn-lg w-100">INITIALIZE NODE</button>
         </form>
@@ -150,55 +143,70 @@
     </div>
 
     <p class="text-center mt-4 small opacity-75">
-      Objective: Scale ₹1,000 → ₹10,000 in 7 solar cycles
+      Mission: Scale ₹1,000 → ₹10,000 in 7 cycles
     </p>
   </div>
 </div>
 
 <!-- Dashboard -->
 <div id="dashboard" class="container py-4 d-none">
-  <header class="d-flex flex-wrap justify-content-between align-items-center mb-4" data-aos="fade-down">
-    <h4 class="m-0 neon-text">₹<span id="balance">1,000</span></h4>
-    <div class="d-flex gap-3 align-items-center">
-      <span class="badge bg-dark">Day <span id="currentDay">1</span>/7</span>
-      <button id="aiToggle" class="btn btn-outline-success btn-sm"><i class="bi bi-cpu"></i> AI Pattern</button>
+  <header class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="m-0 neon-text">₹<span id="balance">1,000</span></h4>
+      <div class="small opacity-75">Available Balance</div>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <span class="badge bg-dark px-3 py-2">Day <span id="currentDay">1</span>/7</span>
+      <button id="aiToggle" class="btn btn-outline-success btn-sm"><i class="bi bi-cpu-fill"></i> AI</button>
       <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Disconnect</button>
     </div>
   </header>
 
+  <div class="mb-3">
+    <div class="d-flex justify-content-between small mb-1">
+      <span>Protocol Target</span>
+      <span id="targetPercent">0%</span>
+    </div>
+    <div class="progress" style="height:10px; background:rgba(0,255,85,0.12);">
+      <div id="targetBar" class="progress-bar bg-success" role="progressbar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Social ticker -->
+  <div class="glass p-2 mb-4 small text-center overflow-hidden">
+    <div id="tickerContent"></div>
+  </div>
+
   <!-- Streak -->
   <div class="d-flex justify-content-center gap-2 gap-md-3 mb-4 flex-wrap" data-aos="flip-up">
-    <div class="streak-day bg-dark">1</div>
-    <div class="streak-day bg-dark">2</div>
-    <div class="streak-day bg-dark">3</div>
-    <div class="streak-day bg-dark">4</div>
-    <div class="streak-day bg-dark">5</div>
-    <div class="streak-day bg-dark">6</div>
+    <div class="streak-day bg-dark">1</div><div class="streak-day bg-dark">2</div>
+    <div class="streak-day bg-dark">3</div><div class="streak-day bg-dark">4</div>
+    <div class="streak-day bg-dark">5</div><div class="streak-day bg-dark">6</div>
     <div class="streak-day bg-dark">7</div>
   </div>
 
   <!-- Chart -->
   <div class="card glass mb-4 overflow-hidden" data-aos="fade-up">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="m-0">LIVE FEED • <span id="price">0.00000</span></h5>
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+      <h5 class="m-0">LIVE • <span id="price">142.75</span> <span id="priceChange"></span></h5>
       <div class="btn-group btn-group-sm">
         <button id="zoomIn"  class="btn btn-outline-light"><i class="bi bi-zoom-in"></i></button>
         <button id="zoomOut" class="btn btn-outline-light"><i class="bi bi-zoom-out"></i></button>
         <button id="reset"   class="btn btn-outline-light"><i class="bi bi-arrow-counterclockwise"></i></button>
       </div>
     </div>
-    <canvas id="chartCanvas" height="280"></canvas>
+    <canvas id="chartCanvas" height="260"></canvas>
   </div>
 
-  <!-- Trade controls -->
+  <!-- Controls -->
   <div class="row g-3 mb-4">
-    <div class="col-12 col-sm-5 col-md-4">
+    <div class="col-12 col-sm-5">
       <div class="glass p-3">
         <label class="form-label small">Amount (₹)</label>
         <input type="number" id="tradeAmount" class="form-control glass" value="100" min="50" step="50">
       </div>
     </div>
-    <div class="col-12 col-sm-7 col-md-8">
+    <div class="col-12 col-sm-7">
       <div class="glass p-3">
         <label class="form-label small">Duration</label>
         <div class="btn-group w-100">
@@ -222,39 +230,50 @@
   <!-- Stats -->
   <div class="row g-3 text-center mb-4">
     <div class="col-6 col-md-3" data-aos="fade-up"><div class="glass p-3"><small>Total</small><h5 id="totalTrades">0</h5></div></div>
-    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="80"><div class="glass p-3"><small>Win Rate</small><h5 id="winRate">0%</h5></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="80"><div class="glass p-3"><small>Win %</small><h5 id="winRate">0%</h5></div></div>
     <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="160"><div class="glass p-3"><small>Wins</small><h5 id="wins">0</h5></div></div>
     <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="240"><div class="glass p-3"><small>Losses</small><h5 id="losses">0</h5></div></div>
   </div>
 
   <!-- Log -->
   <div class="card glass" data-aos="fade-up">
-    <div class="card-header">Transmission Log</div>
-    <div id="log" class="list-group list-group-flush" style="max-height:180px;overflow-y:auto;"></div>
+    <div class="card-header py-2">Transmission Log</div>
+    <div id="log" class="list-group list-group-flush" style="max-height:160px;overflow-y:auto;"></div>
   </div>
 </div>
 
-<!-- Mission Modal -->
+<!-- Win Modal -->
 <div class="modal fade" id="winModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content glass">
       <div class="modal-header border-0">
-        <h5 class="modal-title neon-text">PROTOCOL COMPLETE</h5>
+        <h5 class="modal-title neon-text">PROTOCOL BREACHED</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center">
-        <h3 class="neon-text mb-4">₹10,000 TARGET REACHED</h3>
-        <p class="mb-4">You have successfully breached the 7-day Green Protocol.</p>
-        <button id="downloadCert" class="btn btn-neon">Download Certificate</button>
+        <h3 class="neon-text mb-4">₹10,000 TARGET ACHIEVED</h3>
+        <p class="mb-4">You have successfully completed the 7-day Green Protocol.</p>
+        <button id="downloadCert" class="btn btn-neon px-4">Claim Certificate</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Tiny embedded sounds (base64 short clips) -->
+<audio id="clickSound">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+<audio id="winSound">
+  <source src="data:audio/wav;base64,UklGRl4AAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YWIAAAB" type="audio/wav">
+</audio>
+<audio id="lossSound">
+  <source src="data:audio/wav;base64,UklGRl4AAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YWIAAAB" type="audio/wav">
+</audio>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script>
-AOS.init({duration:800,easing:'ease-out'});
+AOS.init({duration:700});
 
 let balance = 1000;
 let wins = 0, losses = 0;
@@ -262,30 +281,35 @@ let aiEnabled = false;
 let candles = [];
 let zoom = 1, pan = 0;
 let price = 142.75;
-let forcedWin = null; // null | 'long' | 'short'
+let forcedWin = null;
 let forcedCounter = 0;
 let currentDay = 1;
 let selectedSeconds = 5;
 
 const el = id => document.getElementById(id);
 const log = txt => {
-  const li = document.createElement('div');
-  li.className = 'list-group-item bg-transparent border-0 small py-1';
-  li.textContent = `[${new Date().toLocaleTimeString()}] ${txt}`;
-  el('log').prepend(li);
-  if (el('log').children.length > 20) el('log').lastElementChild.remove();
+  const div = document.createElement('div');
+  div.className = 'list-group-item bg-transparent border-0 small py-1 text-white-50';
+  div.textContent = `[${new Date().toLocaleTimeString('en-IN')}] ${txt}`;
+  el('log').prepend(div);
+  if (el('log').children.length > 18) el('log').lastElementChild.remove();
 };
 
 function updateUI() {
-  el('balance').textContent = balance.toLocaleString();
+  el('balance').textContent = balance.toLocaleString('en-IN');
   el('currentDay').textContent = currentDay;
-  el('price').textContent = price.toFixed(2);
   el('totalTrades').textContent = wins + losses;
   el('winRate').textContent = (wins + losses ? ((wins / (wins + losses)) * 100).toFixed(0) : 0) + '%';
   el('wins').textContent = wins;
   el('losses').textContent = losses;
 
+  const target = 10000;
+  const pct = Math.min((balance / target) * 100, 100);
+  el('targetBar').style.width = pct + '%';
+  el('targetPercent').textContent = pct.toFixed(0) + '%';
+
   if (balance >= 10000) {
+    confetti({particleCount:140, spread:90, origin:{y:0.6}, colors:['#00ff55','#ccff00','#ffffff']});
     new bootstrap.Modal(el('winModal')).show();
   }
 }
@@ -296,19 +320,12 @@ function generateCandle() {
     dir = forcedWin === 'long' ? 1 : -1;
     forcedCounter--;
   } else {
-    dir = Math.random() > 0.48 ? 1 : -1;
+    dir = Math.random() > 0.47 ? 1 : -1;
   }
-
-  const change = dir * (0.08 + Math.random() * 0.35);
+  const change = dir * (0.09 + Math.random() * 0.4);
   const prev = price;
   price = Math.max(10, price + change);
-
-  return {
-    open: prev,
-    close: price,
-    high: Math.max(prev, price) + Math.random() * 0.2,
-    low:  Math.min(prev, price) - Math.random() * 0.2
-  };
+  return { open: prev, close: price, high: Math.max(prev, price) + Math.random()*0.25, low: Math.min(prev, price) - Math.random()*0.25 };
 }
 
 function draw() {
@@ -317,7 +334,7 @@ function draw() {
   const w = c.width = c.offsetWidth;
   const h = c.height;
 
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillStyle = 'rgba(0,12,0,0.55)';
   ctx.fillRect(0,0,w,h);
 
   if (!candles.length) return;
@@ -330,39 +347,42 @@ function draw() {
   const maxP = Math.max(...slice.map(c=>c.high));
   const range = maxP - minP || 1;
 
-  slice.forEach((candle, i) => {
+  slice.forEach((c, i) => {
     const x = i * 14;
-    const y = v => h - ((v - minP) / range * (h * 0.92)) - h*0.04;
+    const y = v => h - ((v - minP) / range * (h * 0.9)) - h*0.05;
 
-    const top    = y(candle.high);
-    const bottom = y(candle.low);
-    const o      = y(candle.open);
-    const cl     = y(candle.close);
-
+    const top = y(c.high), bot = y(c.low), o = y(c.open), cl = y(c.close);
     ctx.strokeStyle = cl > o ? '#00ff88' : '#ff4d4d';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.8;
 
-    // wick
-    ctx.beginPath();
-    ctx.moveTo(x+7, top);
-    ctx.lineTo(x+7, bottom);
-    ctx.stroke();
-
-    // body
+    ctx.beginPath(); ctx.moveTo(x+7, top); ctx.lineTo(x+7, bot); ctx.stroke();
     ctx.fillStyle = ctx.strokeStyle;
-    ctx.fillRect(x+2, Math.min(o,cl), 10, Math.max(Math.abs(o-cl),1));
+    ctx.fillRect(x+2.5, Math.min(o,cl), 9, Math.max(Math.abs(o-cl), 1));
   });
 }
 
 function tick() {
+  const old = price;
   candles.push(generateCandle());
   if (candles.length > 300) candles.shift();
+
+  const ch = price - old;
+  const chEl = el('priceChange');
+  chEl.textContent = ch >= 0 ? `+${ch.toFixed(2)}` : ch.toFixed(2);
+  chEl.className = ch >= 0 ? 'text-success' : 'text-danger';
+
+  el('price').classList.add('text-warning');
+  setTimeout(() => el('price').classList.remove('text-warning'), 500);
+
+  el('price').textContent = price.toFixed(2);
+
   draw();
-  if (aiEnabled && Math.random() < 0.18) {
+
+  if (aiEnabled && Math.random() < 0.16) {
     const dir = Math.random() > 0.5 ? 'long' : 'short';
-    log(`AI PATTERN DETECTED → ${dir.toUpperCase()}`);
+    log(`AI → ${dir.toUpperCase()} pattern detected`);
     forcedWin = dir;
-    forcedCounter = 4 + Math.floor(Math.random()*4);
+    forcedCounter = 4 + Math.floor(Math.random()*5);
   }
 }
 
@@ -372,15 +392,15 @@ function placeTrade(isLong) {
 
   balance -= amt;
   updateUI();
-  log(`${isLong?'LONG':'SHORT'} • ₹${amt}`);
+  log(`${isLong ? 'LONG' : 'SHORT'} • ₹${amt.toLocaleString('en-IN')}`);
 
   const entry = price;
-  let remaining = selectedSeconds;
+  let sec = selectedSeconds;
 
-  const tid = setInterval(() => {
-    remaining--;
-    if (remaining <= 0) {
-      clearInterval(tid);
+  const t = setInterval(() => {
+    sec--;
+    if (sec <= 0) {
+      clearInterval(t);
       const exit = price;
       const won = (isLong && exit > entry) || (!isLong && exit < entry);
 
@@ -388,20 +408,45 @@ function placeTrade(isLong) {
         const profit = Math.round(amt * 0.82);
         balance += amt + profit;
         wins++;
-        log(`TARGET HIT  +₹${profit}`);
+        log(`TARGET HIT  +₹${profit.toLocaleString('en-IN')}`);
+        if (profit > 400) confetti({particleCount:70, spread:70});
       } else {
         losses++;
-        log(`STOP LOSS HIT  -₹${amt}`);
+        log(`STOP LOSS  -₹${amt.toLocaleString('en-IN')}`);
       }
       updateUI();
     }
   }, 1000);
 }
 
+// Social ticker
+const fake = [
+  "NightHawk won ₹2,340 on BTC/USD LONG",
+  "OdishaNode activated • +78% streak",
+  "AI signal fired → 7 consecutive hits",
+  "User_9182 reached ₹9,120 balance",
+  "New connection: Bhubaneswar → Protocol live"
+];
+let tickerIdx = 0;
+function rotateTicker() {
+  const content = el('tickerContent');
+  content.innerHTML = fake.map((t,i) => `<span class="mx-5 ${i===tickerIdx?'fw-bold text-success':''}">${t}</span>`).join('  •  ');
+  tickerIdx = (tickerIdx + 1) % fake.length;
+}
+rotateTicker();
+setInterval(rotateTicker, 9000);
+
 // Events
-el('loginForm').onsubmit = e => { e.preventDefault(); el('loginScreen').classList.add('d-none'); el('dashboard').classList.remove('d-none'); el('loading').style.display='none'; };
-el('registerForm').onsubmit = e => { e.preventDefault(); el('loginScreen').classList.add('d-none'); el('dashboard').classList.remove('d-none'); el('loading').style.display='none'; };
-el('logoutBtn').onclick = () => { location.reload(); };
+['loginForm','registerForm'].forEach(id => {
+  el(id).onsubmit = e => {
+    e.preventDefault();
+    el('loginScreen').classList.add('d-none');
+    el('dashboard').classList.remove('d-none');
+    el('loading').style.display = 'none';
+  };
+});
+
+el('logoutBtn').onclick = () => location.reload();
 
 el('aiToggle').onclick = () => {
   aiEnabled = !aiEnabled;
@@ -409,9 +454,9 @@ el('aiToggle').onclick = () => {
   el('aiToggle').classList.toggle('btn-outline-success', !aiEnabled);
 };
 
-document.querySelectorAll('.duration').forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll('.duration').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.duration').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.duration').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     selectedSeconds = +b.dataset.sec;
   };
@@ -420,36 +465,36 @@ document.querySelectorAll('.duration').forEach(b=>{
 el('btnLong').onclick  = () => placeTrade(true);
 el('btnShort').onclick = () => placeTrade(false);
 
-el('zoomIn').onclick  = () => { zoom = Math.min(zoom*1.4, 6); draw(); };
-el('zoomOut').onclick = () => { zoom = Math.max(zoom/1.4, 0.4); draw(); };
-el('reset').onclick   = () => { zoom=1; pan=0; draw(); };
+el('zoomIn').onclick  = () => { zoom = Math.min(zoom * 1.4, 6); draw(); };
+el('zoomOut').onclick = () => { zoom = Math.max(zoom / 1.4, 0.4); draw(); };
+el('reset').onclick   = () => { zoom = 1; pan = 0; draw(); };
 
-let dragX = 0;
-el('chartCanvas').onpointerdown = e=>{ dragX = e.clientX; };
-el('chartCanvas').onpointermove = e=>{
+let drag = 0;
+el('chartCanvas').onpointerdown = e => drag = e.clientX;
+el('chartCanvas').onpointermove = e => {
   if (e.buttons !== 1) return;
-  pan += Math.round((dragX - e.clientX)/8);
+  pan += Math.round((drag - e.clientX) / 8);
   pan = Math.max(0, pan);
-  dragX = e.clientX;
+  drag = e.clientX;
   draw();
 };
 
-el('downloadCert').onclick = ()=>{
-  const text = `NeonTrade Green Protocol Certificate\nNode: ${Math.random().toString(36).slice(2,10).toUpperCase()}\nAchieved: ₹10,000\nDate: ${new Date().toLocaleDateString('en-IN')}`;
+el('downloadCert').onclick = () => {
+  const text = `NeonTrade Green Protocol Certificate\nNode ID: ${Math.random().toString(36).slice(2,10).toUpperCase()}\nTarget Achieved: ₹10,000\nLocation: Bhubaneswar, Odisha\nDate: ${new Date().toLocaleDateString('en-IN')}`;
   const a = document.createElement('a');
   a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
-  a.download = 'neontrade_certificate.txt';
+  a.download = 'neontrade-green-protocol-certificate.txt';
   a.click();
 };
 
 // Init
-window.onload = ()=>{
+window.onload = () => {
   el('loading').style.display = 'none';
-  for (let i=0; i<60; i++) candles.push(generateCandle());
+  for (let i = 0; i < 80; i++) candles.push(generateCandle());
   draw();
-  setInterval(tick, 1800);
+  setInterval(tick, 1600);
   updateUI();
-  document.querySelector('.streak-day:nth-child(1)').classList.add('streak-active');
+  document.querySelectorAll('.streak-day')[0].classList.add('streak-active');
 };
 </script>
 </body>
