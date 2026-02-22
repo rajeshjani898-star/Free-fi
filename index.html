@@ -1,256 +1,456 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeonTrade Elite - Green Protocol Final</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeonTrade Futures • Green Protocol</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --neon-green: #00ff55;
-            --neon-lime: #ccff00;
-            --neon-red: #ff3333;
-            --bg-deep: #000800;
-            --glass: rgba(0, 255, 85, 0.05);
-            --glass-border: 1px solid rgba(0, 255, 85, 0.3);
-        }
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-        body {
-            background: linear-gradient(180deg, #000000 0%, #051405 100%);
-            color: #e0e0e0;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+  <!-- AOS -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
 
-        .rajdhani { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+  <style>
+    :root {
+      --neon-green: #00ff55;
+      --neon-lime:  #ccff00;
+      --dark-bg:    #000814;
+      --glass:      rgba(0, 255, 85, 0.06);
+      --glass-border: rgba(0, 255, 85, 0.25);
+      --loss-red:   #ff2d55;
+    }
 
-        .neon-panel {
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            border: var(--glass-border);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 255, 85, 0.1);
-        }
+    body {
+      background: linear-gradient(to bottom, #000000, #0a1f0a);
+      color: #e0ffe0;
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        #chartWrapper { background: #000; position: relative; border-radius: 8px; overflow: hidden; height: 420px; border: 1px solid #111; }
-        .ticker { position: absolute; top: 15px; right: 25px; font-size: 1.8rem; font-family: 'Rajdhani'; z-index: 10; padding: 5px 15px; background: rgba(0,0,0,0.6); border-radius: 4px; border: 1px solid currentColor; }
+    h1, h2, h3, h4, h5, .display-*, .nav-link, .btn {
+      font-family: 'Rajdhani', sans-serif;
+      letter-spacing: 0.5px;
+    }
 
-        .btn-cyber { font-family: 'Rajdhani'; font-weight: 700; transition: 0.3s; border-radius: 4px; }
-        .btn-long { border: 1px solid var(--neon-green); color: var(--neon-green); }
-        .btn-long:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 25px var(--neon-green); }
-        .btn-short { border: 1px solid var(--neon-red); color: var(--neon-red); }
-        .btn-short:hover { background: var(--neon-red); color: #000; box-shadow: 0 0 25px var(--neon-red); }
-        
-        .ai-active { background: var(--neon-lime) !important; color: #000 !important; box-shadow: 0 0 20px var(--neon-lime); }
-        
-        #appScreen { display: none; }
-        .log-entry { font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 5px 0; font-family: 'Courier New', monospace; }
-    </style>
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 255, 85, 0.12);
+    }
+
+    .neon-text {
+      color: var(--neon-green);
+      text-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+    }
+
+    .btn-neon {
+      background: linear-gradient(45deg, var(--neon-green), #00cc44);
+      border: none;
+      color: black;
+      font-weight: 600;
+      text-shadow: 0 0 8px rgba(0,0,0,0.6);
+    }
+
+    .btn-neon:hover {
+      background: var(--neon-lime);
+      transform: translateY(-1px);
+      box-shadow: 0 0 25px var(--neon-lime);
+    }
+
+    .btn-danger {
+      background: var(--loss-red);
+      border: none;
+    }
+
+    #chartCanvas {
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    .streak-day {
+      width: 38px;
+      height: 38px;
+      line-height: 38px;
+      text-align: center;
+      border-radius: 50%;
+      font-weight: 600;
+      transition: all 0.4s;
+    }
+
+    .streak-active {
+      background: var(--neon-green);
+      color: black;
+      box-shadow: 0 0 20px var(--neon-green);
+      transform: scale(1.15);
+    }
+
+    .badge-protocol {
+      font-size: 1.1rem;
+      padding: 0.6em 1.4em;
+      background: linear-gradient(90deg, #00ff55, #00cc44);
+      color: black;
+    }
+
+    @media (max-width: 576px) {
+      .btn-lg { font-size: 1.1rem; padding: 1rem; }
+      .streak-day { width: 32px; height: 32px; line-height: 32px; font-size: 0.85rem; }
+    }
+  </style>
 </head>
 <body>
 
-    <div id="loader" class="vh-100 d-flex flex-column justify-content-center align-items-center">
-        <div class="spinner-grow text-success" role="status"></div>
-        <div class="rajdhani text-success mt-3 h5">SYNCHRONIZING REPOSITORY...</div>
+<!-- Loading -->
+<div id="loading" class="position-fixed top-0 start-0 w-100 h-100 bg-dark d-flex justify-content-center align-items-center" style="z-index:9999;">
+  <div class="spinner-grow text-success" style="width:4rem;height:4rem;" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<!-- Login -->
+<div id="loginScreen" class="container d-flex align-items-center justify-content-center min-vh-100">
+  <div class="card glass p-4 p-md-5 col-11 col-sm-9 col-md-7 col-lg-5" data-aos="zoom-in">
+    <h1 class="text-center neon-text mb-2 fw-bold">NEONTRADE</h1>
+    <div class="badge badge-protocol mx-auto mb-4">7-DAY GREEN PROTOCOL</div>
+
+    <ul class="nav nav-tabs nav-justified mb-4" id="authTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">ACCESS</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new" type="button">NEW NODE</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="access">
+        <form id="loginForm">
+          <input type="email"    class="form-control mb-3 glass" placeholder="Node ID (email)" required>
+          <input type="password" class="form-control mb-4 glass" placeholder="Quantum Key" required>
+          <button type="submit" class="btn btn-neon btn-lg w-100">CONNECT</button>
+        </form>
+      </div>
+      <div class="tab-pane fade" id="new">
+        <form id="registerForm">
+          <input type="email"    class="form-control mb-3 glass" placeholder="New Node ID" required>
+          <input type="password" class="form-control mb-4 glass" placeholder="Create Quantum Key" required>
+          <button type="submit" class="btn btn-neon btn-lg w-100">INITIALIZE NODE</button>
+        </form>
+      </div>
     </div>
 
-    <div id="authScreen" class="vh-100 d-flex align-items-center justify-content-center" style="display:none;">
-        <div class="neon-panel p-5 text-center" data-aos="zoom-in" style="width: 420px;">
-            <i class="bi bi-cpu-fill text-success h1"></i>
-            <h1 class="rajdhani text-success mb-2">NEONTRADE</h1>
-            <p class="text-muted small mb-4">MASTER ADMIN ACCESS</p>
-            <button class="btn btn-long w-100 py-2 btn-cyber" onclick="initApp()">CONNECT UPLINK</button>
-        </div>
+    <p class="text-center mt-4 small opacity-75">
+      Objective: Scale ₹1,000 → ₹10,000 in 7 solar cycles
+    </p>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="container py-4 d-none">
+  <header class="d-flex flex-wrap justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="m-0 neon-text">₹<span id="balance">1,000</span></h4>
+    <div class="d-flex gap-3 align-items-center">
+      <span class="badge bg-dark">Day <span id="currentDay">1</span>/7</span>
+      <button id="aiToggle" class="btn btn-outline-success btn-sm"><i class="bi bi-cpu"></i> AI Pattern</button>
+      <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Disconnect</button>
     </div>
+  </header>
 
-    <div id="appScreen" class="container-fluid py-3 px-4">
-        <div class="d-flex justify-content-between align-items-end mb-4">
-            <div>
-                <div class="text-muted small rajdhani">Liquid Assets</div>
-                <h2 class="rajdhani text-success mb-0">₹<span id="balDisplay">1000.00</span></h2>
-            </div>
-            <div class="d-flex gap-3">
-                <button class="btn btn-outline-info btn-sm btn-cyber" onclick="exportLogs()"><i class="bi bi-download"></i> EXPORT REPORT</button>
-                <button id="aiBtn" class="btn btn-outline-warning btn-sm btn-cyber" onclick="toggleAI()"><i class="bi bi-cpu"></i> AI PATTERN: OFF</button>
-                <button class="btn btn-outline-danger btn-sm" onclick="resetSystem()"><i class="bi bi-arrow-counterclockwise"></i> RESET</button>
-            </div>
-        </div>
+  <!-- Streak -->
+  <div class="d-flex justify-content-center gap-2 gap-md-3 mb-4 flex-wrap" data-aos="flip-up">
+    <div class="streak-day bg-dark">1</div>
+    <div class="streak-day bg-dark">2</div>
+    <div class="streak-day bg-dark">3</div>
+    <div class="streak-day bg-dark">4</div>
+    <div class="streak-day bg-dark">5</div>
+    <div class="streak-day bg-dark">6</div>
+    <div class="streak-day bg-dark">7</div>
+  </div>
 
-        <div class="row g-4">
-            <div class="col-lg-9">
-                <div class="neon-panel p-1 mb-4" id="chartWrapper">
-                    <div id="priceTicker" class="ticker text-success">0.00</div>
-                    <canvas id="mainChart"></canvas>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-4"><div class="neon-panel p-3 text-center"><small class="text-muted rajdhani d-block">Win Rate</small><span id="statWinRate" class="rajdhani h4">0%</span></div></div>
-                    <div class="col-md-4"><div class="neon-panel p-3 text-center text-success"><small class="text-muted rajdhani d-block">Profit/Loss</small><span id="statRevenue" class="rajdhani h4">₹0</span></div></div>
-                    <div class="col-md-4"><div class="neon-panel p-3 text-center text-info"><small class="text-muted rajdhani d-block">Trades</small><span id="statTotal" class="rajdhani h4">0</span></div></div>
-                </div>
-            </div>
-
-            <div class="col-lg-3">
-                <div class="neon-panel p-4 mb-4">
-                    <h5 class="rajdhani mb-4 text-center">Execution</h5>
-                    <div class="mb-4">
-                        <label class="small text-muted rajdhani">Position Size (₹)</label>
-                        <input type="number" id="tradeAmt" class="form-control bg-dark text-white rajdhani fs-4 text-center" value="100">
-                    </div>
-                    <div class="row g-2 mb-4">
-                        <div class="col-6"><button class="btn btn-long w-100 py-3 btn-cyber h5 m-0" onclick="executeTrade('LONG')">LONG</button></div>
-                        <div class="col-6"><button class="btn btn-short w-100 py-3 btn-cyber h5 m-0" onclick="executeTrade('SHORT')">SHORT</button></div>
-                    </div>
-                </div>
-                <div class="neon-panel p-3">
-                    <h6 class="rajdhani text-muted mb-3 border-bottom border-secondary pb-2">Terminal Logs</h6>
-                    <div id="txLog" class="log-container" style="height: 250px; overflow-y: auto;"></div>
-                </div>
-            </div>
-        </div>
+  <!-- Chart -->
+  <div class="card glass mb-4 overflow-hidden" data-aos="fade-up">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="m-0">LIVE FEED • <span id="price">0.00000</span></h5>
+      <div class="btn-group btn-group-sm">
+        <button id="zoomIn"  class="btn btn-outline-light"><i class="bi bi-zoom-in"></i></button>
+        <button id="zoomOut" class="btn btn-outline-light"><i class="bi bi-zoom-out"></i></button>
+        <button id="reset"   class="btn btn-outline-light"><i class="bi bi-arrow-counterclockwise"></i></button>
+      </div>
     </div>
+    <canvas id="chartCanvas" height="280"></canvas>
+  </div>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        let balance = parseFloat(localStorage.getItem('nt_balance')) || 1000.00;
-        let stats = JSON.parse(localStorage.getItem('nt_stats')) || { wins: 0, total: 0, revenue: 0 };
-        let history = JSON.parse(localStorage.getItem('nt_history')) || [];
-        let currentPrice = 68420.50;
-        let aiEnabled = false, forcedTrend = null, candles = [];
+  <!-- Trade controls -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-5 col-md-4">
+      <div class="glass p-3">
+        <label class="form-label small">Amount (₹)</label>
+        <input type="number" id="tradeAmount" class="form-control glass" value="100" min="50" step="50">
+      </div>
+    </div>
+    <div class="col-12 col-sm-7 col-md-8">
+      <div class="glass p-3">
+        <label class="form-label small">Duration</label>
+        <div class="btn-group w-100">
+          <button class="btn btn-outline-light duration active" data-sec="5">5s</button>
+          <button class="btn btn-outline-light duration" data-sec="15">15s</button>
+          <button class="btn btn-outline-light duration" data-sec="60">60s</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        const canvas = document.getElementById('mainChart');
-        const ctx = canvas.getContext('2d');
+  <div class="row g-3 mb-5">
+    <div class="col-6">
+      <button id="btnLong" class="btn btn-neon btn-lg w-100"><i class="bi bi-arrow-up-circle-fill"></i> LONG</button>
+    </div>
+    <div class="col-6">
+      <button id="btnShort" class="btn btn-danger btn-lg w-100"><i class="bi bi-arrow-down-circle-fill"></i> SHORT</button>
+    </div>
+  </div>
 
-        function initApp() {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            AOS.init();
-            resizeCanvas();
-            seedMarket();
-            updateUI();
-            history.forEach(entry => log(entry.msg, entry.color, false));
-            log("UPLINK STABLE. PROTOCOL RESUMED.", "text-success");
-        }
+  <!-- Stats -->
+  <div class="row g-3 text-center mb-4">
+    <div class="col-6 col-md-3" data-aos="fade-up"><div class="glass p-3"><small>Total</small><h5 id="totalTrades">0</h5></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="80"><div class="glass p-3"><small>Win Rate</small><h5 id="winRate">0%</h5></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="160"><div class="glass p-3"><small>Wins</small><h5 id="wins">0</h5></div></div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="240"><div class="glass p-3"><small>Losses</small><h5 id="losses">0</h5></div></div>
+  </div>
 
-        window.onload = () => {
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('authScreen').style.display = 'flex';
-            }, 1000);
-            window.addEventListener('resize', resizeCanvas);
-        };
+  <!-- Log -->
+  <div class="card glass" data-aos="fade-up">
+    <div class="card-header">Transmission Log</div>
+    <div id="log" class="list-group list-group-flush" style="max-height:180px;overflow-y:auto;"></div>
+  </div>
+</div>
 
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-        }
+<!-- Mission Modal -->
+<div class="modal fade" id="winModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass">
+      <div class="modal-header border-0">
+        <h5 class="modal-title neon-text">PROTOCOL COMPLETE</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <h3 class="neon-text mb-4">₹10,000 TARGET REACHED</h3>
+        <p class="mb-4">You have successfully breached the 7-day Green Protocol.</p>
+        <button id="downloadCert" class="btn btn-neon">Download Certificate</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function seedMarket() {
-            for(let i=0; i<60; i++) addCandle();
-            setInterval(() => { addCandle(); drawChart(); }, 2000);
-        }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+AOS.init({duration:800,easing:'ease-out'});
 
-        function addCandle() {
-            let open = candles.length > 0 ? candles[candles.length - 1].close : currentPrice;
-            let move = (Math.random() - 0.5) * 60;
-            if (forcedTrend === 'up') move = Math.abs(move) + 20;
-            if (forcedTrend === 'down') move = -Math.abs(move) - 20;
-            let close = open + move;
-            let high = Math.max(open, close) + Math.random() * 10;
-            let low = Math.min(open, close) - Math.random() * 10;
-            currentPrice = close;
-            candles.push({ open, close, high, low });
-            if (candles.length > 80) candles.shift();
-            document.getElementById('priceTicker').innerText = currentPrice.toFixed(2);
-            document.getElementById('priceTicker').style.color = close >= open ? 'var(--neon-green)' : 'var(--neon-red)';
-        }
+let balance = 1000;
+let wins = 0, losses = 0;
+let aiEnabled = false;
+let candles = [];
+let zoom = 1, pan = 0;
+let price = 142.75;
+let forcedWin = null; // null | 'long' | 'short'
+let forcedCounter = 0;
+let currentDay = 1;
+let selectedSeconds = 5;
 
-        function drawChart() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const w = canvas.width / candles.length;
-            const max = Math.max(...candles.map(c => c.high)) + 10;
-            const min = Math.min(...candles.map(c => c.low)) - 10;
-            const range = max - min;
-            const getY = (p) => canvas.height - ((p - min) / range) * canvas.height;
-            candles.forEach((c, i) => {
-                const x = i * w;
-                ctx.strokeStyle = c.close >= c.open ? '#00ff55' : '#ff3333';
-                ctx.beginPath(); ctx.moveTo(x + w/2, getY(c.high)); ctx.lineTo(x + w/2, getY(c.low)); ctx.stroke();
-                ctx.fillStyle = ctx.strokeStyle;
-                ctx.fillRect(x + 3, getY(Math.max(c.open, c.close)), w - 6, Math.abs(getY(c.open) - getY(c.close)) + 1);
-            });
-        }
+const el = id => document.getElementById(id);
+const log = txt => {
+  const li = document.createElement('div');
+  li.className = 'list-group-item bg-transparent border-0 small py-1';
+  li.textContent = `[${new Date().toLocaleTimeString()}] ${txt}`;
+  el('log').prepend(li);
+  if (el('log').children.length > 20) el('log').lastElementChild.remove();
+};
 
-        function executeTrade(type) {
-            const amt = parseFloat(document.getElementById('tradeAmt').value);
-            if (amt > balance) return log("ERROR: INSUFFICIENT BALANCE", "text-danger");
-            balance -= amt; updateUI();
-            log(`EXEC: ${type} @ ${currentPrice.toFixed(2)}`, "text-warning");
-            let entry = currentPrice;
-            setTimeout(() => {
-                const isWin = type === 'LONG' ? currentPrice > entry : currentPrice < entry;
-                if (isWin) {
-                    let win = amt * 1.85; balance += win; stats.wins++; stats.revenue += (win - amt);
-                    log(`PROFIT: +₹${(win - amt).toFixed(2)}`, "text-success");
-                } else {
-                    log(`LOSS: -₹${amt.toFixed(2)}`, "text-danger");
-                }
-                stats.total++; saveState(); updateUI();
-            }, 5000);
-        }
+function updateUI() {
+  el('balance').textContent = balance.toLocaleString();
+  el('currentDay').textContent = currentDay;
+  el('price').textContent = price.toFixed(2);
+  el('totalTrades').textContent = wins + losses;
+  el('winRate').textContent = (wins + losses ? ((wins / (wins + losses)) * 100).toFixed(0) : 0) + '%';
+  el('wins').textContent = wins;
+  el('losses').textContent = losses;
 
-        function toggleAI() {
-            aiEnabled = !aiEnabled;
-            const btn = document.getElementById('aiBtn');
-            if(aiEnabled) {
-                btn.classList.add('ai-active'); btn.innerHTML = '<i class="bi bi-cpu-fill"></i> AI PATTERN: ON';
-                log("AI OVERRIDE: TARGETING VOLATILITY", "text-info");
-                setTimeout(() => {
-                    forcedTrend = Math.random() > 0.5 ? 'up' : 'down';
-                    log(`AI SIGNAL: MARKET SHORTING ${forcedTrend.toUpperCase()}`, "text-lime");
-                    setTimeout(() => forcedTrend = null, 8000);
-                }, 1000);
-            } else { btn.classList.remove('ai-active'); btn.innerHTML = '<i class="bi bi-cpu"></i> AI PATTERN: OFF'; forcedTrend = null; }
-        }
+  if (balance >= 10000) {
+    new bootstrap.Modal(el('winModal')).show();
+  }
+}
 
-        function updateUI() {
-            document.getElementById('balDisplay').innerText = balance.toFixed(2);
-            document.getElementById('statRevenue').innerText = `₹${stats.revenue.toFixed(0)}`;
-            document.getElementById('statTotal').innerText = stats.total;
-            document.getElementById('statWinRate').innerText = (stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0) + '%';
-        }
+function generateCandle() {
+  let dir = 0;
+  if (forcedCounter > 0) {
+    dir = forcedWin === 'long' ? 1 : -1;
+    forcedCounter--;
+  } else {
+    dir = Math.random() > 0.48 ? 1 : -1;
+  }
 
-        function saveState() {
-            localStorage.setItem('nt_balance', balance);
-            localStorage.setItem('nt_stats', JSON.stringify(stats));
-            localStorage.setItem('nt_history', JSON.stringify(history.slice(0, 50)));
-        }
+  const change = dir * (0.08 + Math.random() * 0.35);
+  const prev = price;
+  price = Math.max(10, price + change);
 
-        function log(msg, color, shouldSave = true) {
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${color}`;
-            entry.innerHTML = `<span class="text-muted">[${new Date().toLocaleTimeString([], {hour12: false})}]</span> ${msg}`;
-            document.getElementById('txLog').prepend(entry);
-            if (shouldSave) { history.unshift({ msg, color }); saveState(); }
-        }
+  return {
+    open: prev,
+    close: price,
+    high: Math.max(prev, price) + Math.random() * 0.2,
+    low:  Math.min(prev, price) - Math.random() * 0.2
+  };
+}
 
-        function exportLogs() {
-            const data = history.map(h => `[${new Date().toISOString()}] ${h.msg}`).join('\n');
-            const blob = new Blob([data], { type: 'text/plain' });
-            const anchor = document.createElement('a');
-            anchor.href = window.URL.createObjectURL(blob);
-            anchor.download = 'GreenProtocol_Audit.txt';
-            anchor.click();
-        }
+function draw() {
+  const c = el('chartCanvas');
+  const ctx = c.getContext('2d');
+  const w = c.width = c.offsetWidth;
+  const h = c.height;
 
-        function resetSystem() {
-            if(confirm("Confirm Factory Reset?")) { localStorage.clear(); location.reload(); }
-        }
-    </script>
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0,0,w,h);
+
+  if (!candles.length) return;
+
+  const vis = Math.floor(w / 14);
+  const start = Math.max(0, candles.length - vis - pan);
+  const slice = candles.slice(start, start + vis);
+
+  const minP = Math.min(...slice.map(c=>c.low));
+  const maxP = Math.max(...slice.map(c=>c.high));
+  const range = maxP - minP || 1;
+
+  slice.forEach((candle, i) => {
+    const x = i * 14;
+    const y = v => h - ((v - minP) / range * (h * 0.92)) - h*0.04;
+
+    const top    = y(candle.high);
+    const bottom = y(candle.low);
+    const o      = y(candle.open);
+    const cl     = y(candle.close);
+
+    ctx.strokeStyle = cl > o ? '#00ff88' : '#ff4d4d';
+    ctx.lineWidth = 1.5;
+
+    // wick
+    ctx.beginPath();
+    ctx.moveTo(x+7, top);
+    ctx.lineTo(x+7, bottom);
+    ctx.stroke();
+
+    // body
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fillRect(x+2, Math.min(o,cl), 10, Math.max(Math.abs(o-cl),1));
+  });
+}
+
+function tick() {
+  candles.push(generateCandle());
+  if (candles.length > 300) candles.shift();
+  draw();
+  if (aiEnabled && Math.random() < 0.18) {
+    const dir = Math.random() > 0.5 ? 'long' : 'short';
+    log(`AI PATTERN DETECTED → ${dir.toUpperCase()}`);
+    forcedWin = dir;
+    forcedCounter = 4 + Math.floor(Math.random()*4);
+  }
+}
+
+function placeTrade(isLong) {
+  const amt = Number(el('tradeAmount').value);
+  if (amt < 50 || amt > balance) return alert('Invalid amount');
+
+  balance -= amt;
+  updateUI();
+  log(`${isLong?'LONG':'SHORT'} • ₹${amt}`);
+
+  const entry = price;
+  let remaining = selectedSeconds;
+
+  const tid = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(tid);
+      const exit = price;
+      const won = (isLong && exit > entry) || (!isLong && exit < entry);
+
+      if (won) {
+        const profit = Math.round(amt * 0.82);
+        balance += amt + profit;
+        wins++;
+        log(`TARGET HIT  +₹${profit}`);
+      } else {
+        losses++;
+        log(`STOP LOSS HIT  -₹${amt}`);
+      }
+      updateUI();
+    }
+  }, 1000);
+}
+
+// Events
+el('loginForm').onsubmit = e => { e.preventDefault(); el('loginScreen').classList.add('d-none'); el('dashboard').classList.remove('d-none'); el('loading').style.display='none'; };
+el('registerForm').onsubmit = e => { e.preventDefault(); el('loginScreen').classList.add('d-none'); el('dashboard').classList.remove('d-none'); el('loading').style.display='none'; };
+el('logoutBtn').onclick = () => { location.reload(); };
+
+el('aiToggle').onclick = () => {
+  aiEnabled = !aiEnabled;
+  el('aiToggle').classList.toggle('btn-success', aiEnabled);
+  el('aiToggle').classList.toggle('btn-outline-success', !aiEnabled);
+};
+
+document.querySelectorAll('.duration').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.duration').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    selectedSeconds = +b.dataset.sec;
+  };
+});
+
+el('btnLong').onclick  = () => placeTrade(true);
+el('btnShort').onclick = () => placeTrade(false);
+
+el('zoomIn').onclick  = () => { zoom = Math.min(zoom*1.4, 6); draw(); };
+el('zoomOut').onclick = () => { zoom = Math.max(zoom/1.4, 0.4); draw(); };
+el('reset').onclick   = () => { zoom=1; pan=0; draw(); };
+
+let dragX = 0;
+el('chartCanvas').onpointerdown = e=>{ dragX = e.clientX; };
+el('chartCanvas').onpointermove = e=>{
+  if (e.buttons !== 1) return;
+  pan += Math.round((dragX - e.clientX)/8);
+  pan = Math.max(0, pan);
+  dragX = e.clientX;
+  draw();
+};
+
+el('downloadCert').onclick = ()=>{
+  const text = `NeonTrade Green Protocol Certificate\nNode: ${Math.random().toString(36).slice(2,10).toUpperCase()}\nAchieved: ₹10,000\nDate: ${new Date().toLocaleDateString('en-IN')}`;
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = 'neontrade_certificate.txt';
+  a.click();
+};
+
+// Init
+window.onload = ()=>{
+  el('loading').style.display = 'none';
+  for (let i=0; i<60; i++) candles.push(generateCandle());
+  draw();
+  setInterval(tick, 1800);
+  updateUI();
+  document.querySelector('.streak-day:nth-child(1)').classList.add('streak-active');
+};
+</script>
 </body>
 </html>
