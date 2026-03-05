@@ -1,0 +1,37 @@
+{
+  "appId": "com.smartscan.app",
+  "appName": "Smart Scan",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["fonts.googleapis.com", "fonts.gstatic.com"]
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "android/app/keystore.jks",
+      "keystoreAlias": "smartscan",
+      "releaseType": "APK"
+    },
+    "backgroundColor": "#050508",
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#050508"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "backgroundColor": "#050508",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#050508"
+    }
+  }
+}
