@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AppX Store</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            padding-bottom: 90px;
+            user-select: none;
+        }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .btn-gradient { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); }
+        .nav-active { color: #3b82f6; }
+        .page-section { display: none; animation: fadeIn 0.3s; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .app-card:active { transform: scale(0.96); }
+        .input-field {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: white;
+            width: 100%;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);        }
+        .input-field::placeholder { color: #64748b; }
+        textarea.input-field { min-height: 120px; resize: vertical; }
+        .section-title {
+            color: #60a5fa;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-[#0f172a] z-50 flex flex-col items-center justify-center">
+        <div class="w-20 h-20 rounded-2xl btn-gradient flex items-center justify-center mb-4 animate-pulse">
+            <i class="fa-solid fa-store text-3xl"></i>
+        </div>
+        <p class="text-gray-400">Loading...</p>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
+        <div class="bg-[#1e293b] rounded-3xl p-6 w-full max-w-sm border border-gray-700">
+            <h3 class="text-2xl font-bold mb-6" id="authTitle">Welcome Back</h3>
+            <input type="email" id="authEmail" placeholder="Email" class="input-field mb-3">
+            <input type="password" id="authPassword" placeholder="Password (min 6 chars)" class="input-field mb-6">
+            <button onclick="handleAuth()" class="w-full btn-gradient text-white py-3 rounded-xl font-bold mb-3">Continue</button>
+            <button onclick="toggleAuthMode()" class="w-full text-blue-400 text-sm" id="authToggle">New user? Create account</button>
+            <button onclick="closeAuth()" class="w-full text-gray-500 text-sm mt-4">Cancel</button>
+        </div>
+    </div>
+
+    <!-- App Detail Modal -->
+    <div id="appModal" class="fixed inset-0 bg-[#0f172a] z-50 hidden overflow-y-auto">
+        <div class="min-h-screen pb-24">
+            <div class="sticky top-0 bg-[#0f172a]/95 backdrop-blur p-4 flex items-center justify-between border-b border-gray-800 z-10">
+                <button onclick="closeAppModal()" class="w-10 h-10 rounded-full bg-[#1e293b] flex items-center justify-center">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button onclick="reportApp()" class="w-10 h-10 rounded-full bg-[#1e293b] flex items-center justify-center text-red-400">
+                    <i class="fa-solid fa-flag"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="p-5"></div>
+        </div>
+    </div>
+    <!-- Upload App Page -->
+    <div id="uploadPage" class="fixed inset-0 bg-[#0f172a] z-50 hidden overflow-y-auto">
+        <div class="min-h-screen pb-24">
+            <div class="sticky top-0 bg-[#0f172a]/95 backdrop-blur p-4 flex items-center border-b border-gray-800 z-10">
+                <button onclick="closeUploadPage()" class="w-10 h-10 rounded-full bg-[#1e293b] flex items-center justify-center mr-3">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h3 class="font-bold text-xl">Upload New App</h3>
+            </div>
+            
+            <form id="uploadForm" class="p-5 space-y-6" onsubmit="handleAppUpload(event)">
+                <!-- Basic Details -->
+                <div>
+                    <h4 class="section-title">Basic Details</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="input-field flex items-center">
+                                <i class="fa-solid fa-grid-2 text-blue-500 mr-3"></i>
+                                <input type="text" name="appName" placeholder="App Name" required class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm text-gray-400 mb-2 block">Category (e.g. Games)</label>
+                            <div class="input-field flex items-center">
+                                <i class="fa-solid fa-shapes text-blue-500 mr-3"></i>
+                                <select name="category" required class="bg-transparent border-none outline-none flex-1 text-white">
+                                    <option value="Games">Games</option>
+                                    <option value="Social">Social</option>
+                                    <option value="Productivity">Productivity</option>
+                                    <option value="Tools">Tools</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Music">Music</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <textarea name="description" placeholder="Description" required class="input-field" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Info -->
+                <div>
+                    <h4 class="section-title">Technical Info</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-gray-400 mb-2 block">Package Name (com.my.app)</label>                            <div class="input-field flex items-center">
+                                <i class="fa-solid fa-code text-blue-500 mr-3"></i>
+                                <input type="text" name="packageName" placeholder="com.my.app" required pattern="[a-z0-9.]+" class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm text-gray-400 mb-2 block">Version Code (e.g. 2)</label>
+                            <div class="input-field flex items-center">
+                                <i class="fa-solid fa-hashtag text-blue-500 mr-3"></i>
+                                <input type="number" name="versionCode" placeholder="1" required min="1" class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <input type="text" name="versionName" placeholder="Version Name (e.g. 1.0.0)" required class="input-field">
+                        </div>
+                        
+                        <div>
+                            <input type="text" name="appSize" placeholder="App Size (e.g. 45 MB)" required class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assets & Links -->
+                <div>
+                    <h4 class="section-title">Assets & Links</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="input-field flex items-center">
+                                <i class="fa-regular fa-image text-blue-500 mr-3"></i>
+                                <input type="url" name="iconUrl" placeholder="Icon URL" required class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="input-field flex items-center">
+                                <i class="fa-solid fa-link text-blue-500 mr-3"></i>
+                                <input type="url" name="apkUrl" placeholder="APK Download URL" required class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="input-field flex items-center">
+                                <i class="fa-regular fa-image text-blue-500 mr-3"></i>
+                                <input type="url" name="screenshot1" placeholder="Screenshot 1 URL" required class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>                            <div class="input-field flex items-center">
+                                <i class="fa-regular fa-image text-blue-500 mr-3"></i>
+                                <input type="url" name="screenshot2" placeholder="Screenshot 2 URL (Optional)" class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="input-field flex items-center">
+                                <i class="fa-regular fa-image text-blue-500 mr-3"></i>
+                                <input type="url" name="screenshot3" placeholder="Screenshot 3 URL (Optional)" class="bg-transparent border-none outline-none flex-1 text-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full btn-gradient text-white py-4 rounded-2xl font-bold text-lg shadow-lg">
+                    Submit for Approval
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="px-5 pt-6 pb-4 sticky top-0 bg-[#0f172a]/95 backdrop-blur z-40 border-b border-gray-800">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h1 class="text-3xl font-bold">AppX Store</h1>
+                <p class="text-gray-400 text-sm mt-1">Discover amazing apps</p>
+            </div>
+            <button onclick="openProfile()" class="w-12 h-12 rounded-xl btn-gradient flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                <span id="userInitial">A</span>
+            </button>
+        </div>
+        
+        <div class="relative">
+            <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+            <input type="text" id="searchBox" placeholder="Search apps & games..." 
+                oninput="searchApps(this.value)"
+                class="w-full bg-[#1e293b] text-white pl-12 pr-4 py-3 rounded-2xl border border-gray-700 outline-none focus:border-blue-500">
+        </div>
+    </header>
+
+    <!-- HOME PAGE -->
+    <section id="homePage" class="page-section active">
+        <!-- Categories -->
+        <div class="px-5 mt-6">
+            <div class="flex overflow-x-auto hide-scroll space-x-3 pb-2" id="categoryContainer">
+                <button onclick="filterCategory('All')" class="cat-btn px-6 py-2.5 rounded-full btn-gradient text-white font-medium text-sm whitespace-nowrap">All</button>
+                <button onclick="filterCategory('Games')" class="cat-btn px-6 py-2.5 rounded-full bg-[#1e293b] text-gray-400 font-medium text-sm whitespace-nowrap border border-gray-700">Games</button>
+                <button onclick="filterCategory('Social')" class="cat-btn px-6 py-2.5 rounded-full bg-[#1e293b] text-gray-400 font-medium text-sm whitespace-nowrap border border-gray-700">Social</button>                <button onclick="filterCategory('Productivity')" class="cat-btn px-6 py-2.5 rounded-full bg-[#1e293b] text-gray-400 font-medium text-sm whitespace-nowrap border border-gray-700">Productivity</button>
+                <button onclick="filterCategory('Tools')" class="cat-btn px-6 py-2.5 rounded-full bg-[#1e293b] text-gray-400 font-medium text-sm whitespace-nowrap border border-gray-700">Tools</button>
+                <button onclick="filterCategory('Entertainment')" class="cat-btn px-6 py-2.5 rounded-full bg-[#1e293b] text-gray-400 font-medium text-sm whitespace-nowrap border border-gray-700">Entertainment</button>
+            </div>
+        </div>
+
+        <!-- Recommended -->
+        <div class="mt-8">
+            <h2 class="text-xl font-bold px-5 mb-4">Recommended For You</h2>
+            <div class="flex overflow-x-auto hide-scroll px-5 space-x-4 pb-4" id="recommendedApps"></div>
+        </div>
+
+        <!-- Featured -->
+        <div class="mt-4 px-5">
+            <h2 class="text-xl font-bold mb-4">Featured</h2>
+            <div id="featuredApp" class="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl p-5 flex items-center space-x-4 shadow-xl"></div>
+        </div>
+
+        <!-- Top Charts -->
+        <div class="mt-8">
+            <h2 class="text-xl font-bold px-5 mb-4">Top Charts</h2>
+            <div class="px-5 space-y-3 pb-24" id="topCharts"></div>
+        </div>
+    </section>
+
+    <!-- UPDATES PAGE -->
+    <section id="updatesPage" class="page-section">
+        <div class="px-5 pt-6 pb-4">
+            <h2 class="text-3xl font-bold mb-2">Updates</h2>
+            <p class="text-gray-400" id="updatesText">Checking for updates...</p>
+        </div>
+        <div class="px-5 space-y-4 pb-24" id="updatesList"></div>
+    </section>
+
+    <!-- PROFILE PAGE -->
+    <section id="profilePage" class="page-section">
+        <div class="px-5 pt-6 pb-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">My Profile</h2>
+                <div class="flex space-x-3">
+                    <button onclick="editProfile()" class="w-10 h-10 rounded-full bg-[#1e293b] border border-gray-700 flex items-center justify-center text-blue-400">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="logout()" class="w-10 h-10 rounded-full bg-[#1e293b] border border-gray-700 flex items-center justify-center text-red-400">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="profileNotLoggedIn" class="text-center py-12">                <div class="w-20 h-20 rounded-full bg-[#1e293b] mx-auto mb-4 flex items-center justify-center text-3xl">
+                    <i class="fa-solid fa-user text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Not Logged In</h3>
+                <p class="text-gray-400 mb-6">Login to access your profile</p>
+                <button onclick="openAuthModal()" class="btn-gradient text-white px-8 py-3 rounded-xl font-bold">Login / Sign Up</button>
+            </div>
+
+            <div id="profileLoggedIn" class="hidden">
+                <!-- User Info -->
+                <div class="bg-[#1e293b] rounded-3xl p-6 flex items-center space-x-4 mb-6 border border-gray-700">
+                    <div class="w-16 h-16 rounded-2xl btn-gradient flex items-center justify-center text-white font-bold text-2xl" id="profileAvatar">U</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold" id="profileName">User</h3>
+                        <p class="text-gray-400 text-sm" id="profileEmail">user@email.com</p>
+                    </div>
+                </div>
+
+                <!-- Upload Button -->
+                <button onclick="openUploadPage()" class="w-full btn-gradient text-white py-4 rounded-2xl font-bold mb-8 flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-plus mr-2"></i> Upload New App
+                </button>
+
+                <!-- My Uploaded Apps -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="text-lg font-bold">My Uploaded Apps</h3>
+                        <button onclick="manageAllApps()" class="text-blue-400 text-sm font-medium">Manage All</button>
+                    </div>
+                    <div id="uploadedAppsList" class="space-y-3 pb-24"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#1e293b]/95 backdrop-blur border-t border-gray-700 px-6 py-3 flex justify-around items-center z-40 pb-6">
+        <button onclick="switchTab('home')" id="navHome" class="flex flex-col items-center space-y-1 nav-active">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-xs font-medium">Home</span>
+        </button>
+        <button onclick="switchTab('updates')" id="navUpdates" class="flex flex-col items-center space-y-1 text-gray-500">
+            <i class="fa-solid fa-download text-xl"></i>
+            <span class="text-xs font-medium">Updates</span>
+        </button>
+        <button onclick="switchTab('profile')" id="navProfile" class="flex flex-col items-center space-y-1 text-gray-500">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-xs font-medium">Profile</span>
+        </button>
+    </nav>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHZ4_PhE2gbJBDzipArubqJpHW88Alw5o",
+            authDomain: "tournament-62f77.firebaseapp.com",
+            databaseURL: "https://tournament-62f77-default-rtdb.firebaseio.com",
+            projectId: "tournament-62f77",
+            storageBucket: "tournament-62f77.firebasestorage.app",
+            messagingSenderId: "59905181993",
+            appId: "1:59905181993:web:8ad4f721ac50c09c478f38",
+            measurementId: "G-QHHJ1BJWMP"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const storage = firebase.storage();
+
+        // Global Variables
+        let currentUser = null;
+        let appsData = [];
+        let currentCategory = 'All';
+        let isSignUp = false;
+        let currentAppId = null;
+
+        // Auth State Listener
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            updateAuthUI();
+            if (user) {
+                loadUserDownloads(user.uid);
+                loadUserUploadedApps(user.uid);
+            }
+            hideLoading();
+        });
+
+        function hideLoading() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 1000);
+        }
+
+        // Auth Functions
+        function openAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
+        }
+        function closeAuth() {
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('authModal').classList.remove('flex');
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+        }
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('authTitle').textContent = isSignUp ? 'Create Account' : 'Welcome Back';
+            document.getElementById('authToggle').textContent = isSignUp ? 'Already have account? Login' : "New user? Create account";
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (isSignUp) {
+                if (password.length < 6) {
+                    alert('Password must be at least 6 characters');
+                    return;
+                }
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((cred) => {
+                        return db.ref('users/' + cred.user.uid).set({
+                            email: email,
+                            name: email.split('@')[0],
+                            createdAt: firebase.database.ServerValue.TIMESTAMP,
+                            downloads: [],
+                            uploadedApps: []
+                        });
+                    })
+                    .then(() => closeAuth())
+                    .catch(error => alert('Error: ' + error.message));
+            } else {
+                auth.signInWithEmailAndPassword(email, password)
+                    .catch(error => alert('Error: ' + error.message));
+            }
+        }
+
+        function logout() {
+            auth.signOut();
+            switchTab('home');
+        }
+        function updateAuthUI() {
+            const initial = currentUser ? currentUser.email[0].toUpperCase() : 'A';
+            document.getElementById('userInitial').textContent = initial;
+            
+            if (currentUser) {
+                document.getElementById('profileNotLoggedIn').classList.add('hidden');
+                document.getElementById('profileLoggedIn').classList.remove('hidden');
+                document.getElementById('profileName').textContent = currentUser.email.split('@')[0];
+                document.getElementById('profileEmail').textContent = currentUser.email;
+                document.getElementById('profileAvatar').textContent = initial;
+            } else {
+                document.getElementById('profileNotLoggedIn').classList.remove('hidden');
+                document.getElementById('profileLoggedIn').classList.add('hidden');
+            }
+        }
+
+        // Upload App Functions
+        function openUploadPage() {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            document.getElementById('uploadPage').classList.remove('hidden');
+        }
+
+        function closeUploadPage() {
+            document.getElementById('uploadPage').classList.add('hidden');
+            document.getElementById('uploadForm').reset();
+        }
+
+        function handleAppUpload(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                alert('Please login first');
+                return;
+            }
+
+            const formData = new FormData(e.target);
+            const screenshots = [
+                formData.get('screenshot1'),
+                formData.get('screenshot2'),
+                formData.get('screenshot3')
+            ].filter(url => url && url.trim() !== '');
+
+            const appData = {
+                name: formData.get('appName'),
+                category: formData.get('category'),
+                description: formData.get('description'),
+                packageName: formData.get('packageName'),                versionCode: parseInt(formData.get('versionCode')),
+                version: formData.get('versionName'),
+                size: formData.get('appSize'),
+                iconUrl: formData.get('iconUrl'),
+                downloadUrl: formData.get('apkUrl'),
+                screenshots: screenshots,
+                developer: currentUser.email.split('@')[0],
+                developerEmail: currentUser.email,
+                uploadedBy: currentUser.uid,
+                rating: 0,
+                downloads: 0,
+                reviews: 0,
+                status: 'pending', // pending, approved, rejected
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                isFeatured: false
+            };
+
+            // Save to Firebase
+            const newAppRef = db.ref('apps').push();
+            newAppRef.set(appData)
+                .then(() => {
+                    // Add to user's uploaded apps
+                    db.ref('users/' + currentUser.uid + '/uploadedApps/' + newAppRef.key).set({
+                        appId: newAppRef.key,
+                        name: appData.name,
+                        status: 'pending',
+                        uploadedAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    alert('App submitted for approval!');
+                    closeUploadPage();
+                    loadUserUploadedApps(currentUser.uid);
+                })
+                .catch(error => {
+                    alert('Error uploading app: ' + error.message);
+                });
+        }
+
+        function loadUserUploadedApps(uid) {
+            db.ref('users/' + uid + '/uploadedApps').once('value', snapshot => {
+                const uploads = snapshot.val();
+                const container = document.getElementById('uploadedAppsList');
+                
+                if (!uploads || Object.keys(uploads).length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 bg-[#1e293b] rounded-2xl border border-gray-700">
+                            <i class="fa-solid fa-cloud-upload-alt text-4xl text-gray-600 mb-3"></i>
+                            <p class="text-gray-400">No apps uploaded yet</p>
+                            <button onclick="openUploadPage()" class="mt-4 text-blue-400 font-medium">Upload your first app</button>
+                        </div>                    `;
+                    return;
+                }
+
+                const uploadIds = Object.values(uploads).map(u => u.appId);
+                const userApps = appsData.filter(app => uploadIds.includes(app.id));
+
+                if (userApps.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No apps found</p>';
+                    return;
+                }
+
+                container.innerHTML = userApps.map(app => {
+                    const statusColors = {
+                        'pending': 'text-yellow-400 bg-yellow-400/10',
+                        'approved': 'text-green-400 bg-green-400/10',
+                        'rejected': 'text-red-400 bg-red-400/10'
+                    };
+                    const statusClass = statusColors[app.status] || statusColors['pending'];
+                    
+                    return `
+                        <div class="app-card flex items-center space-x-4 bg-[#1e293b] p-4 rounded-2xl border border-gray-700 cursor-pointer">
+                            <img src="${app.iconUrl}" class="w-16 h-16 rounded-xl bg-white p-1 object-cover">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <h4 class="font-bold text-lg">${app.name}</h4>
+                                    <span class="text-xs px-2 py-1 rounded-full ${statusClass} capitalize">${app.status}</span>
+                                </div>
+                                <div class="flex items-center text-yellow-400 text-sm">
+                                    <i class="fa-solid fa-star mr-1"></i>${app.rating || '0.0'}
+                                    <span class="text-gray-500 mx-2">•</span>
+                                    <span class="text-gray-400">${app.downloads} downloads</span>
+                                </div>
+                            </div>
+                            <button onclick="editUploadedApp('${app.id}')" class="text-gray-400 hover:text-white p-2">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        // Load Apps from Firebase
+        function loadApps() {
+            db.ref('apps').once('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    appsData = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                } else {                    addDemoApps();
+                }
+                renderAll();
+            });
+        }
+
+        function addDemoApps() {
+            const demos = [
+                { 
+                    name: 'WhatsApp', 
+                    developer: 'Meta', 
+                    category: 'Social', 
+                    rating: 4.5, 
+                    downloads: 5000, 
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/733/733585.png', 
+                    description: 'Simple. Secure. Reliable messaging.', 
+                    version: '2.23.5', 
+                    size: '45 MB', 
+                    isFeatured: true,
+                    screenshots: ['https://via.placeholder.com/300x600'],
+                    reviews: 1250
+                },
+                { 
+                    name: 'Sketchware pro', 
+                    developer: 'NiceSapien', 
+                    category: 'Tools', 
+                    rating: 5.0, 
+                    downloads: 8, 
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/5968/5968863.png', 
+                    description: 'Visual programming IDE for Android', 
+                    version: '150', 
+                    size: '35 MB', 
+                    isFeatured: false,
+                    screenshots: [
+                        'https://via.placeholder.com/300x600/0000FF/FFFFFF?text=Screen+1',
+                        'https://via.placeholder.com/300x600/00FF00/FFFFFF?text=Screen+2'
+                    ],
+                    reviews: 3
+                },
+                { 
+                    name: 'SMM Panel', 
+                    developer: 'Rajeshjani', 
+                    category: 'Social', 
+                    rating: 5.0, 
+                    downloads: 150, 
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3670/3670151.png', 
+                    description: 'Social Media Marketing Panel', 
+                    version: '1.0', 
+                    size: '25 MB', 
+                    isFeatured: false,                    screenshots: ['https://via.placeholder.com/300x600'],
+                    reviews: 5
+                }
+            ];
+
+            demos.forEach((app, index) => {
+                db.ref('apps/app' + index).set(app);
+                appsData.push({ id: 'app' + index, ...app });
+            });
+        }
+
+        function renderAll() {
+            renderRecommended();
+            renderFeatured();
+            renderTopCharts();
+        }
+
+        function renderRecommended() {
+            const container = document.getElementById('recommendedApps');
+            let filtered = appsData;
+            
+            if (currentCategory !== 'All') {
+                filtered = appsData.filter(app => app.category === currentCategory);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No apps found</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.slice(0, 8).map(app => `
+                <div onclick="openAppModal('${app.id}')" class="app-card flex-shrink-0 w-28 flex flex-col items-center cursor-pointer">
+                    <img src="${app.iconUrl}" class="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg mb-2 object-cover">
+                    <h4 class="text-sm font-bold text-center leading-tight mb-1">${app.name}</h4>
+                    <div class="flex items-center text-yellow-400 text-xs">
+                        <i class="fa-solid fa-star mr-1"></i>${app.rating || '0.0'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFeatured() {
+            const container = document.getElementById('featuredApp');
+            const featured = appsData.find(app => app.isFeatured) || appsData[0];
+
+            if (!featured) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = `
+                <img src="${featured.iconUrl}" class="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg object-cover">
+                <div class="flex-1 text-white">
+                    <h3 class="text-xl font-bold mb-1">${featured.name}</h3>
+                    <p class="text-cyan-100 text-sm mb-2">${featured.category}</p>
+                    <div class="flex items-center space-x-3 text-sm mb-3">
+                        <span><i class="fa-solid fa-star text-yellow-300 mr-1"></i>${featured.rating}</span>
+                        <span>•</span>
+                        <span>${featured.downloads}+ downloads</span>
+                    </div>
+                    <button onclick="openAppModal('${featured.id}')" class="bg-white text-blue-600 px-4 py-1.5 rounded-full text-sm font-bold">
+                        Install
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderTopCharts() {
+            const container = document.getElementById('topCharts');
+            const sorted = [...appsData].sort((a, b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 5);
+
+            container.innerHTML = sorted.map((app, index) => `
+                <div onclick="openAppModal('${app.id}')" class="app-card flex items-center space-x-4 bg-[#1e293b] p-3 rounded-2xl border border-gray-700 cursor-pointer">
+                    <span class="text-gray-500 font-bold text-lg w-8 text-center">${index + 1}</span>
+                    <img src="${app.iconUrl}" class="w-12 h-12 rounded-xl bg-white p-1 object-cover">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-sm truncate">${app.name}</h4>
+                        <p class="text-gray-400 text-xs truncate">${app.developer}</p>
+                    </div>
+                    <div class="flex items-center text-yellow-400 text-xs bg-[#0f172a] px-2 py-1 rounded-lg">
+                        <i class="fa-solid fa-star mr-1"></i>${app.rating}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search & Filter
+        function searchApps(query) {
+            const lower = query.toLowerCase();
+            const filtered = appsData.filter(app => 
+                app.name.toLowerCase().includes(lower) || 
+                (app.developer && app.developer.toLowerCase().includes(lower))
+            );
+            
+            const original = appsData;
+            appsData = filtered;
+            renderAll();
+            appsData = original;
+        }
+        function filterCategory(cat) {
+            currentCategory = cat;
+            
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('btn-gradient', 'text-white');
+                btn.classList.add('bg-[#1e293b]', 'text-gray-400');
+            });
+            event.target.classList.remove('bg-[#1e293b]', 'text-gray-400');
+            event.target.classList.add('btn-gradient', 'text-white');
+            
+            renderRecommended();
+        }
+
+        // App Detail Modal with Screenshots
+        function openAppModal(appId) {
+            const app = appsData.find(a => a.id === appId);
+            if (!app) return;
+            
+            currentAppId = appId;
+
+            const screenshotsHtml = app.screenshots && app.screenshots.length > 0 ? `
+                <div class="mt-6">
+                    <h4 class="text-xl font-bold mb-4">Screenshots</h4>
+                    <div class="flex overflow-x-auto hide-scroll space-x-3 pb-4">
+                        ${app.screenshots.map(url => `
+                            <img src="${url}" class="flex-shrink-0 w-40 h-80 rounded-2xl object-cover border border-gray-700">
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            document.getElementById('modalContent').innerHTML = `
+                <div class="flex items-start space-x-4 mb-6">
+                    <img src="${app.iconUrl}" class="w-24 h-24 rounded-3xl bg-white p-2 shadow-xl object-cover">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold mb-1">${app.name}</h2>
+                        <p class="text-cyan-400 mb-1">${app.category}</p>
+                        <p class="text-gray-400 text-sm">${app.developer}</p>
+                        <div class="flex items-center space-x-3 mt-2">
+                            <span class="text-yellow-400"><i class="fa-solid fa-star mr-1"></i>${app.rating}</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-400">${app.downloads}+ downloads</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="bg-[#1e293b] p-4 rounded-2xl text-center border border-gray-700">
+                        <p class="text-2xl font-bold text-white mb-1">${app.rating || '0.0'}<i class="fa-solid fa-star text-yellow-400 text-sm ml-1"></i></p>
+                        <p class="text-gray-400 text-xs">${app.reviews || 0} reviews</p>                    </div>
+                    <div class="bg-[#1e293b] p-4 rounded-2xl text-center border border-gray-700">
+                        <p class="text-2xl font-bold text-white mb-1">${app.downloads || 0}+</p>
+                        <p class="text-gray-400 text-xs">Downloads</p>
+                    </div>
+                    <div class="bg-[#1e293b] p-4 rounded-2xl text-center border border-gray-700">
+                        <p class="text-2xl font-bold text-white mb-1">v${app.version || '1.0'}</p>
+                        <p class="text-gray-400 text-xs">Version</p>
+                    </div>
+                </div>
+
+                <button onclick="downloadApp('${app.id}')" class="w-full btn-gradient text-white py-4 rounded-2xl font-bold text-lg mb-6 shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-download mr-2"></i>Install
+                </button>
+
+                ${screenshotsHtml}
+
+                <div class="mt-6">
+                    <h4 class="font-bold text-lg mb-3">About this app</h4>
+                    <p class="text-gray-400 leading-relaxed">${app.description || 'No description available.'}</p>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <div class="bg-[#1e293b] p-4 rounded-2xl border border-gray-700">
+                        <p class="text-gray-400 text-xs mb-1">Updated</p>
+                        <p class="font-medium">Recently</p>
+                    </div>
+                    <div class="bg-[#1e293b] p-4 rounded-2xl border border-gray-700">
+                        <p class="text-gray-400 text-xs mb-1">Size</p>
+                        <p class="font-medium">${app.size || 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('appModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAppModal() {
+            document.getElementById('appModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function reportApp() {
+            if (!currentAppId) return;
+            const reason = prompt('Please enter reason for reporting:');
+            if (reason) {
+                db.ref('reports').push({
+                    appId: currentAppId,
+                    reason: reason,                    reportedBy: currentUser ? currentUser.uid : 'anonymous',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                alert('Thank you for your report. We will review it soon.');
+            }
+        }
+
+        function downloadApp(appId) {
+            const app = appsData.find(a => a.id === appId);
+            
+            const appRef = db.ref('apps/' + appId);
+            appRef.transaction(appData => {
+                if (appData) {
+                    appData.downloads = (appData.downloads || 0) + 1;
+                }
+                return appData;
+            });
+
+            if (currentUser) {
+                db.ref('users/' + currentUser.uid + '/downloads/' + appId).set({
+                    downloadedAt: firebase.database.ServerValue.TIMESTAMP,
+                    appName: app.name
+                });
+                loadUserDownloads(currentUser.uid);
+            }
+
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Downloading...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                if (app.downloadUrl) {
+                    window.open(app.downloadUrl, '_blank');
+                }
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>Downloaded';
+                btn.classList.remove('btn-gradient');
+                btn.classList.add('bg-green-600');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    btn.classList.add('btn-gradient');
+                    btn.classList.remove('bg-green-600');
+                    closeAppModal();
+                }, 1500);
+            }, 1500);
+        }
+
+        function loadUserDownloads(uid) {            db.ref('users/' + uid + '/downloads').once('value', snapshot => {
+                // Implementation for download history
+            });
+        }
+
+        function loadUpdates() {
+            const container = document.getElementById('updatesList');
+            const countEl = document.getElementById('updatesText');
+            
+            container.innerHTML = `
+                <div class="bg-[#1e293b] rounded-3xl p-5 flex items-center justify-between border border-gray-700">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                            <i class="fa-solid fa-store text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">AppX Store</h3>
+                            <p class="text-gray-400 text-sm">v1.0 → v1.1</p>
+                            <p class="text-cyan-400 text-xs mt-1">Bug fixes & improvements</p>
+                        </div>
+                    </div>
+                    <button class="btn-gradient text-white px-5 py-2.5 rounded-full font-medium text-sm flex items-center">
+                        <i class="fa-solid fa-arrow-up mr-2"></i>Update
+                    </button>
+                </div>
+            `;
+            countEl.textContent = '1 update available';
+        }
+
+        // Navigation
+        function switchTab(tab) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.getElementById(tab + 'Page').classList.add('active');
+            
+            ['home', 'updates', 'profile'].forEach(t => {
+                const btn = document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (t === tab) {
+                    btn.classList.remove('text-gray-500');
+                    btn.classList.add('nav-active');
+                } else {
+                    btn.classList.add('text-gray-500');
+                    btn.classList.remove('nav-active');
+                }
+            });
+
+            if (tab === 'updates') loadUpdates();
+            if (tab === 'profile' && currentUser) {
+                loadUserUploadedApps(currentUser.uid);
+            }
+                        window.scrollTo(0, 0);
+        }
+
+        function openProfile() {
+            if (currentUser) {
+                switchTab('profile');
+            } else {
+                openAuthModal();
+            }
+        }
+
+        function editProfile() {
+            alert('Edit profile feature coming soon!');
+        }
+
+        function manageAllApps() {
+            alert('Manage all apps feature coming soon!');
+        }
+
+        function editUploadedApp(appId) {
+            const app = appsData.find(a => a.id === appId);
+            if (app) {
+                alert('Edit app: ' + app.name + '\n\nFeature coming soon!');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadApps();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAppModal();
+                closeAuth();
+                closeUploadPage();
+            }
+        });
+    </script>
+</body>
+</html>
